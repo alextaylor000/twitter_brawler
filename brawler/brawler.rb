@@ -6,7 +6,13 @@
 #
 # an invalid method name passed to Receiver will trigger the method_missing
 # method within Receiver
+require 'mongo_mapper'
 require 'byebug'
+
+def configure
+	MongoMapper.database = "twtfudb"
+end
+
 
 class Listener
 	def initialize
@@ -30,11 +36,18 @@ class Listener
 		  if input == 'break'
 		    break
 		  else
-		  	@receiver.send(input.to_sym)
+		  	parse input
 		  end
 		end # while
-
 	end
+
+	def parse(input)
+		# "user1 punch user2" gets split on spaces
+		challenger, verb, challenged = input.split(" ")		
+
+		@receiver.send(verb.to_sym)
+	end
+
 
 end # class Listener
 
@@ -54,14 +67,24 @@ class Receiver
 
 end # class Receiver
 
-class Brawl
-# a new brawl is created when a fighter mentions another
+class Fight
+	include MongoMapper::Document
+	# a new fight is created when a fighter mentions another
+	
+	key :challenger, String
+	key :challenged, String
+	key :id_fight, String # SecureRandom.uuid
+	key :log, Array
 end
 
 
 class Fighter
-# stores stats on each fighter
+	include MongoMapper::Document
+	# stores stats on each fighter
 
+	key :user_name, String
+	key :xp_points, Integer
+	key :fights_hp, Hash
 end
 
 
