@@ -6,8 +6,10 @@
 #
 # an invalid method name passed to Receiver will trigger the method_missing
 # method within Receiver
-require 'mongo_mapper'
-require 'byebug'
+
+require 'digest'		# for generating fight IDs 
+require 'mongo_mapper'	# for db hooks
+require 'byebug' 		# for debugging
 
 DEBUG = true
 FightInitiationWord = 'challenge'
@@ -67,6 +69,7 @@ class Fight
 	include MongoMapper::Document
 	# a new fight is created when a fighter mentions another
 	key :status, String # active when the second user has accepted the fight
+	key :fight_id, String # so we can identify a fight based on both usernames but without looking up challenger and challenged
 	key :challenger, String
 	key :challenged, String
 	key :log, Array
@@ -137,6 +140,7 @@ class Action
 		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
 
 		@fight 	= get_fight					# assign a fight object or create one
+		@fight_id = get_fight_id			# get the fight id for looking up fights; created from a hash of both users, sorted 
 
 		debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
@@ -157,15 +161,22 @@ class Action
 		return fighter
 	end
 
+	def get_fight_id
+		key = [@from.user_name, @to.user_name].sort.join "-"
+		fight_id = Digest::SHA256.hexdigest key
+		debug "fight id #{key} = #{fight_id}"
+
+		return fight_id
+	end
 
 	def get_fight
 		
-		fight = Fight.where(:challenger => @from.user_name, :challenged => @to.user_name).first
+		fight = Fight.where(:fight_id => @fight_id).first
 		#byebug
 		if fight.nil?
 			debug "new fight created."
 
-			fight = Fight.new(:status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
+			fight = Fight.new(:fight_id => @fight_id, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
 			fight.log << @type # TODO: the log may have to become its own model if we want to store stuff like timestamps and full actions
 			fight.save
 		
