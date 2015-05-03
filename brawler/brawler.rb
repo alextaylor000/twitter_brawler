@@ -24,16 +24,40 @@ end
 
 ### MODELS AND MOVES
 class Moves
-	# check out my sweet moves
+	# moves should have three aguments: fight, from, to
+	# they should return a result that can be tweeted
+
+	# default action for missing methods
 	def method_missing(method_name, *args, &block)
 		puts "I don't understand #{method_name}"
 	end
-
-	def accept # accept a fighter's challenge
+	
+	# challenge a player to a match
+	def challenge(fight, from, to)
+		if fight.status == "inactive"
+			fight.status = "waiting"
+			fight.save
+			return "#{to.user_name}: #{from.user_name} has challenged you! accept?"
+		end
 
 	end
 
-	def punch
+	# accept a fighter's challenge
+	def accept(fight, from, to) 
+		if fight.status == "waiting" \
+			and from.user_name == fight.challenged
+
+			fight.status = "active"
+			fight.save
+
+			return "fight accepted. FIGHT!"
+
+		end
+	end
+
+
+
+	def punch(fight, from, to)
 		puts "punch!"
 	end
 
@@ -42,7 +66,7 @@ end
 class Fight
 	include MongoMapper::Document
 	# a new fight is created when a fighter mentions another
-	key :active, Boolean # active when the second user has accepted the fight
+	key :status, String # active when the second user has accepted the fight
 	key :challenger, String
 	key :challenged, String
 	key :log, Array
@@ -80,13 +104,18 @@ class Listener
 	def listen_gets
 		while true do
 		  input = gets.chomp
-		  puts "> #{input}"
+		  #puts "> #{input}"
 
 		  if input == 'break'
 		    break
+
 		  else
-		  	action = Action.new input
-		  	result = action.execute
+		  	if !input.empty?
+		  		action = Action.new input
+		  		result = action.execute
+		  		puts result
+		  	end
+
 		  	# tweet the result
 		  end
 		end # while
@@ -103,33 +132,21 @@ class Action
 	def initialize(input)
 		inputs 	= input.split " "
 
-		@from 	= get_fighter inputs[0]
+		@from 	= get_fighter inputs[0]		# assign a fighter object or create one
 		@type 	= inputs[1...-1].join("_")
-		@to   	= get_fighter inputs[-1]
+		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
 
-		@result	= ""
+		@fight 	= get_fight					# assign a fight object or create one
 
-		debug "init action {from: #{@from}, type:#{@type}, to: #{@to}"
+		debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
 
 	def execute
-		debug "execute action"
-		#byebug
-		# store the fight
-		if Fight.where(:challenger => @from, :challenged => @to).count > 0
-			MOVES.__send__(@type.to_sym)
-
-		else
-			new_fight if @type == FightInitiationWord
-			return "#{@from} challenged #{@to}. accept?"
-
-		end
-
-		
+		debug "execute action #{@type.to_sym}"
+		return MOVES.__send__(@type.to_sym, @fight, @from, @to)
 	end
 
 	def get_fighter(name)
-		byebug
 		fighter = Fighter.where(:user_name => name).first
 
 		if fighter.nil?
@@ -141,11 +158,22 @@ class Action
 	end
 
 
-	def new_fight
-		debug "new fight initiated!"
-		fight = Fight.new(:active => false, :challenger => @from, :challenged => @to)
-		fight.log << @type # TODO: the log may have to become its own model if we want to store stuff like timestamps and full actions
-		fight.save
+	def get_fight
+		
+		fight = Fight.where(:challenger => @from.user_name, :challenged => @to.user_name).first
+		#byebug
+		if fight.nil?
+			debug "new fight created."
+
+			fight = Fight.new(:status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
+			fight.log << @type # TODO: the log may have to become its own model if we want to store stuff like timestamps and full actions
+			fight.save
+		
+		else
+			debug "using existing fight."
+		end
+
+		return fight
 	end
 
 
