@@ -209,7 +209,6 @@ class Action
 	
 		if @from.fights_hp[@title] <= 0 
 			return @to
-		
 		elsif @to.fights_hp[@title] <= 0
 			return @from
 		else
@@ -239,17 +238,18 @@ class Action
 	end
 
 	def get_fight
+		byebug
+		fight = Fight.where(:title => @title, :status => {:$nin => ["won"]}).first
 		
-		fight = Fight.where(:title => @title).first
-		#byebug
-		if fight.nil?
-			debug "new fight created: #{@title}"
-
+		if fight.nil? \
+			or fight.status == "won"
 			fight = Fight.new(:title => @title, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
 			fight.save
+
+			debug "new fight created: #{@title} <#{fight.id}>"
 					
 		else
-			debug "using existing fight."
+			debug "using existing fight #{@title} <#{fight.id}>"
 		end
 
 		return fight
@@ -261,6 +261,7 @@ end
 
 ### TESTS
 def test_execute(command)
+	puts "> #{command}"
 	action = Action.new command
 	result = action.execute
 	puts result
@@ -270,6 +271,14 @@ def test_u1_vs_u2
 	test_execute "u1 challenge u2"
 	test_execute "u2 accept u1"
 	5.times do test_execute "u1 punch u2" end
+
+	test_execute "u2 challenge u1"
+	test_execute "u1 accept u2"
+
+	3.times do test_execute "u2 punch u1" end
+		#byebug
+	4.times do test_execute "u1 punch u2" end
+	2.times do test_execute "u2 punch u1" end
 	
 end
 
