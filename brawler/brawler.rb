@@ -65,7 +65,7 @@ class Moves
 
 			fight.status = "active"
 			fight.save
-			byebug
+
 			# add hp to the fighters for this specific fight
 			from.fights_hp[fight.title] 	= TotalHitPoints
 			to.fights_hp[fight.title] 	= TotalHitPoints
@@ -82,12 +82,10 @@ class Moves
 
 	def punch(fight, from, to)
 		if_is_active(fight) do
-			byebug
-			to_hp = to.fights_hp[fight.id]
-			to_hp -= 5
+			to.fights_hp[fight.title] -= 5
+			to_hp = to.fights_hp[fight.title]
 			to.save
-
-			return "#{from} punches #{to}! -5HP #{to_hp}/#{TotalHitPoints}"
+			return "#{from.user_name} punches #{to.user_name}! -5HP #{to_hp}/#{TotalHitPoints}"
 		end
 	end
 
@@ -196,7 +194,7 @@ class Action
 		if @fight.status == "active"
 			winner = check_for_winner
 			if winner
-				result = "#{winner.user_name} wins! +XP"
+				result = [result, "#{winner.user_name} wins! +XP"]
 				@fight.status = "won"
 				@fight.save
 			end
@@ -208,7 +206,7 @@ class Action
 
 	# return the winner or false if win condition not yet met
 	def check_for_winner
-		byebug
+	
 		if @from.fights_hp[@title] <= 0 
 			return @to
 		
@@ -261,11 +259,19 @@ class Action
 
 end
 
+### TESTS
+def test_execute(command)
+	action = Action.new command
+	result = action.execute
+	puts result
+end
 
-
-
-
-
+def test_u1_vs_u2
+	test_execute "u1 challenge u2"
+	test_execute "u2 accept u1"
+	5.times do test_execute "u1 punch u2" end
+	
+end
 
 # runtime
 configure
@@ -274,10 +280,12 @@ configure
 Fight.destroy_all
 Fighter.destroy_all
 
-#byebug
+# CONSOLE MODE
+#listener = Listener.new
+#listener.listen_gets
 
-listener = Listener.new
-listener.listen_gets
+# TEST MODE
+test_u1_vs_u2
 
 
 
