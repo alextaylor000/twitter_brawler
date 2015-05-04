@@ -12,7 +12,10 @@ require 'mongo_mapper'	# for db hooks
 require 'byebug' 		# for debugging
 
 DEBUG = true
-FightInitiationWord = 'challenge'
+
+### CONSTANTS
+TotalHitPoints = 25
+
 
 def configure
 	MongoMapper.database = "twtfudb"
@@ -28,6 +31,7 @@ end
 class Moves
 	# moves should have three aguments: fight, from, to
 	# they should return a result that can be tweeted
+	# every move's logic should be passed as a block to if_is_active
 
 	# default action for missing methods
 	def method_missing(method_name, *args, &block)
@@ -36,6 +40,7 @@ class Moves
 
 	# every normal move should be wrapped in this so that it only runs if the fight is active
 	def if_is_active(fight)
+		# TODO: is there a better way of accomplishing what I'm trying to do here?
 		if fight.status == "active"
 			yield
 		else
@@ -62,8 +67,8 @@ class Moves
 			fight.save
 			byebug
 			# add hp to the fighters for this specific fight
-			from.fights_hp[fight.fight_id] 	= 10
-			to.fights_hp[fight.fight_id] 	= 10
+			from.fights_hp[fight.fight_id] 	= TotalHitPoints
+			to.fights_hp[fight.fight_id] 	= TotalHitPoints
 
 			from.save
 			to.save
@@ -76,9 +81,14 @@ class Moves
 
 
 	def punch(fight, from, to)
-		byebug
-		to.fights_hp[fight.id] -= 5
-		return 'punch!!'
+		if_is_active(fight) do
+			byebug
+			to_hp = to.fights_hp[fight.id]
+			to_hp -= 5
+			to.save
+
+			return "#{from} punches #{to}! -5HP #{to_hp}/#{TotalHitPoints}"
+		end
 	end
 
 end
@@ -182,8 +192,31 @@ class Action
 
 		result = "Invalid move #{@type}" if result == false
 
+		# check players' hp for death condition
+		if @fight.status == "active"
+			winner = check_for_winner
+			if winner
+				result = "#{winner.user_name} wins! +XP"
+				@fight.status = "won"
+				@fight.save
+			end
+		end
+
 		return result
 
+	end
+
+	# return the winner or false if win condition not yet met
+	def check_for_winner
+		byebug
+		if @from.fights_hp[@fight_id] <= 0 
+			return @to
+		
+		elsif @to.fights_hp[@fight_id] <= 0
+			return @from
+		else
+			return false
+		end
 	end
 
 	def save_log
