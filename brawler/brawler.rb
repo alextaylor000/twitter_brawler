@@ -31,7 +31,16 @@ class Moves
 
 	# default action for missing methods
 	def method_missing(method_name, *args, &block)
-		puts "I don't understand #{method_name}"
+		return false # let the controller handle notifying the user
+	end
+
+	# every normal move should be wrapped in this so that it only runs if the fight is active
+	def if_is_active(fight)
+		if fight.status == "active"
+			yield
+		else
+			return false
+		end
 	end
 	
 	# challenge a player to a match
@@ -58,7 +67,6 @@ class Moves
 	end
 
 
-
 	def punch(fight, from, to)
 		puts "punch!"
 	end
@@ -72,9 +80,20 @@ class Fight
 	key :fight_id, String # so we can identify a fight based on both usernames but without looking up challenger and challenged
 	key :challenger, String
 	key :challenged, String
-	key :log, Array
+
+	many :fight_actions
 end
 
+class FightAction
+	include MongoMapper::EmbeddedDocument
+	# logs each action taken during a fight
+	key :from, String
+	key :move, String
+	key :to, String
+
+	timestamps!
+
+end
 
 class Fighter
 	include MongoMapper::Document
@@ -101,7 +120,7 @@ class Listener
 		puts "available commands:"
 
 		instance_methods = Moves.instance_methods false
-		puts instance_methods[1..-1]
+		puts instance_methods[2..-1]
 	end
 	
 	def listen_gets
@@ -147,7 +166,18 @@ class Action
 
 	def execute
 		debug "execute action #{@type.to_sym}"
-		return MOVES.__send__(@type.to_sym, @fight, @from, @to)
+		result = MOVES.__send__(@type.to_sym, @fight, @from, @to)
+		save_log unless result == false
+
+		result = "Invalid move #{@type}" if result == false
+
+		return result
+
+	end
+
+	def save_log
+		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
+		@fight.save!
 	end
 
 	def get_fighter(name)
@@ -177,7 +207,6 @@ class Action
 			debug "new fight created."
 
 			fight = Fight.new(:fight_id => @fight_id, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
-			fight.log << @type # TODO: the log may have to become its own model if we want to store stuff like timestamps and full actions
 			fight.save
 		
 		else
@@ -201,8 +230,10 @@ end
 configure
 
 # for testing
-Fight.destroy_all
-Fighter.destroy_all
+#Fight.destroy_all
+#Fighter.destroy_all
+
+byebug
 
 listener = Listener.new
 listener.listen_gets
