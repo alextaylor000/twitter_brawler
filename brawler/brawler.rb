@@ -67,8 +67,8 @@ class Moves
 			fight.save
 			byebug
 			# add hp to the fighters for this specific fight
-			from.fights_hp[fight.fight_id] 	= TotalHitPoints
-			to.fights_hp[fight.fight_id] 	= TotalHitPoints
+			from.fights_hp[fight.title] 	= TotalHitPoints
+			to.fights_hp[fight.title] 	= TotalHitPoints
 
 			from.save
 			to.save
@@ -97,7 +97,7 @@ class Fight
 	include MongoMapper::Document
 	# a new fight is created when a fighter mentions another
 	key :status, String # active when the second user has accepted the fight
-	key :fight_id, String # so we can identify a fight based on both usernames but without looking up challenger and challenged
+	key :title, String # so we can identify a fight based on both usernames but without looking up challenger and challenged
 	key :challenger, String
 	key :challenged, String
 
@@ -178,7 +178,7 @@ class Action
 		@type 	= inputs[1...-1].join("_")
 		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
 
-		@fight_id = get_fight_id			# get the fight id for looking up fights; created from a hash of both users, sorted 		
+		@title  = get_title			# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
 		
 
@@ -209,10 +209,10 @@ class Action
 	# return the winner or false if win condition not yet met
 	def check_for_winner
 		byebug
-		if @from.fights_hp[@fight_id] <= 0 
+		if @from.fights_hp[@title] <= 0 
 			return @to
 		
-		elsif @to.fights_hp[@fight_id] <= 0
+		elsif @to.fights_hp[@title] <= 0
 			return @from
 		else
 			return false
@@ -235,23 +235,20 @@ class Action
 		return fighter
 	end
 
-	def get_fight_id
-		# TODO: this fight id will be the same for EVERY fight two users have. this can't be
-		key = [@from.user_name, @to.user_name].sort.join "-"
-		fight_id = Digest::SHA256.hexdigest key
-		debug "fight id #{key} = #{fight_id}"
-
-		return fight_id
+	def get_title
+		# TODO: move this into the Fight class; could probably be created automatically
+		debug "fight id #{key} = #{title}"
+		return [@from.user_name, @to.user_name].sort.join "_vs_"
 	end
 
 	def get_fight
 		
-		fight = Fight.where(:fight_id => @fight_id).first
+		fight = Fight.where(:title => @title).first
 		#byebug
 		if fight.nil?
 			debug "new fight created."
 
-			fight = Fight.new(:fight_id => @fight_id, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
+			fight = Fight.new(:title => @title, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
 			fight.save
 					
 		else
