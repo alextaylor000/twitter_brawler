@@ -60,6 +60,14 @@ class Moves
 
 			fight.status = "active"
 			fight.save
+			byebug
+			# add hp to the fighters for this specific fight
+			from.fights_hp[fight.fight_id] 	= 10
+			to.fights_hp[fight.fight_id] 	= 10
+
+			from.save
+			to.save
+
 
 			return "fight accepted. FIGHT!"
 
@@ -68,7 +76,9 @@ class Moves
 
 
 	def punch(fight, from, to)
-		puts "punch!"
+		byebug
+		to.fights_hp[fight.id] -= 5
+		return 'punch!!'
 	end
 
 end
@@ -158,8 +168,9 @@ class Action
 		@type 	= inputs[1...-1].join("_")
 		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
 
+		@fight_id = get_fight_id			# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
-		@fight_id = get_fight_id			# get the fight id for looking up fights; created from a hash of both users, sorted 
+		
 
 		debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
@@ -192,6 +203,7 @@ class Action
 	end
 
 	def get_fight_id
+		# TODO: this fight id will be the same for EVERY fight two users have. this can't be
 		key = [@from.user_name, @to.user_name].sort.join "-"
 		fight_id = Digest::SHA256.hexdigest key
 		debug "fight id #{key} = #{fight_id}"
@@ -208,7 +220,7 @@ class Action
 
 			fight = Fight.new(:fight_id => @fight_id, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
 			fight.save
-		
+					
 		else
 			debug "using existing fight."
 		end
@@ -230,10 +242,10 @@ end
 configure
 
 # for testing
-#Fight.destroy_all
-#Fighter.destroy_all
+Fight.destroy_all
+Fighter.destroy_all
 
-byebug
+#byebug
 
 listener = Listener.new
 listener.listen_gets
