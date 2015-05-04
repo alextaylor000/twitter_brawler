@@ -237,7 +237,6 @@ class Action
 
 	def get_title
 		# TODO: move this into the Fight class; could probably be created automatically
-		debug "fight id #{key} = #{title}"
 		return [@from.user_name, @to.user_name].sort.join "_vs_"
 	end
 
@@ -246,7 +245,7 @@ class Action
 		fight = Fight.where(:title => @title).first
 		#byebug
 		if fight.nil?
-			debug "new fight created."
+			debug "new fight created: #{@title}"
 
 			fight = Fight.new(:title => @title, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
 			fight.save
