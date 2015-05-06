@@ -52,11 +52,10 @@ class Action
 
 				else
 					# add the current move to fight.pending_move
-					@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
-					@fight.save
+					set_pending_move
 				end
 
-			else
+			else # a pending action is present
 				if @type == "block"
 					result << self.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
 
@@ -67,9 +66,10 @@ class Action
 					pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
 
 					result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
-					result << self.__send__(@type.to_sym, @fight, @from, @to) # execute the current move
+					
+					# store the current move as the new pending move
+					set_pending_move
 
-					reset_pending_move
 				end				
 			end
 
@@ -115,6 +115,11 @@ class Action
 	def save_log
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
 		@fight.save!
+	end
+
+	def set_pending_move
+		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
+		@fight.save		
 	end
 
 	def reset_pending_move

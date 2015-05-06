@@ -27,7 +27,7 @@ require 'byebug' 		# for debugging
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# config.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# action.rb
 
-DEBUG = true
+DEBUG = false
 
 
 def debug(msg)
