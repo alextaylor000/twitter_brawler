@@ -73,7 +73,7 @@ module Moves
 		# TODO: is there a better way of accomplishing what I'm trying to do here?
 		if fight.status == "active"
 			yield
-		
+
 		else
 			return false
 		end
@@ -119,7 +119,7 @@ module Moves
 			to.fights_hp[fight.title] -= damage
 			to_hp = to.fights_hp[fight.title]
 			to.save
-			return "#{from.user_name} hammerfists #{to.user_name}! #{result}, -#{damage}HP #{to_hp}/#{TotalHitPoints}"
+			return "#{from.user_name}'s hammerfist strikes #{to.user_name}! #{result}, -#{damage}HP #{to_hp}/#{TotalHitPoints}"
 		end
 	end
 

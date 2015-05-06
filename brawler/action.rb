@@ -52,7 +52,7 @@ class Action
 
 				else
 					# add the current move to fight.pending_move
-					set_pending_move
+					result << set_pending_move
 				end
 
 			else # a pending action is present
@@ -68,7 +68,7 @@ class Action
 					result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
 					
 					# store the current move as the new pending move
-					set_pending_move
+					result << set_pending_move
 
 				end				
 			end
@@ -124,6 +124,7 @@ class Action
 	def set_pending_move
 		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
 		@fight.save		
+		return "#{@from.user_name} attacks #{@to.user_name} with #{@type}. block or attack?"
 	end
 
 	def reset_pending_move
