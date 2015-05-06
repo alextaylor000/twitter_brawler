@@ -16,7 +16,7 @@ class Action
 		@type 	= inputs[1...-1].join("_")
 		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
 
-		@title  = get_title			# get the fight id for looking up fights; created from a hash of both users, sorted 		
+		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
 		
 

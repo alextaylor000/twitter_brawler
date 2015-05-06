@@ -12,6 +12,7 @@ class Fight
 	key :challenger, String
 	key :challenged, String
 	key :initiative, String
+	key :pending_move, Hash # the move gets stored here until the receiving user has a chance to block. stores the from_user, to_user, move name and base attack
 
 	many :fight_actions
 end
