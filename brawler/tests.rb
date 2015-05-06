@@ -16,15 +16,8 @@ end
 def test_u1_vs_u2
 	test_execute "u1 challenge u2"
 	test_execute "u2 accept u1"
-	5.times do test_execute "u1 punch u2" end
+	3.times do test_execute "u1 hammerfist u2" end
 
-	test_execute "u2 challenge u1"
-	test_execute "u1 accept u2"
-
-	3.times do test_execute "u2 punch u1" end
-	4.times do test_execute "u1 punch u2" end
-	2.times do test_execute "u2 punch u1" end
-	
 end
 
 

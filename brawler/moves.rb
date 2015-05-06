@@ -4,6 +4,35 @@
 ### MODELS AND MOVES
 TotalHitPoints = 25
 
+# Returns a number between 1 and 20
+def roll_dice
+	rand(20) + 1 
+end
+
+# Returns damage dealt and type based on base attack and a roll of the dice
+def calculate_damage(base_attack)
+	roll = roll_dice
+
+	case roll
+		when 1..3		
+			result = "miss"
+			mult = 0
+		when 4..10		
+			result = "graze"
+			mult = 0.75
+		when 11..19
+			result = "hit"
+			mult = 1	# hit
+		when 20
+			result = "critical"
+			mult = 1.25 # critical hit!
+	end
+
+	damage = (base_attack * mult).round
+
+	return result, damage
+end
+
 module Moves
 	# moves should have three aguments: fight, from, to
 	# they should return a result that can be tweeted
@@ -56,13 +85,21 @@ module Moves
 	end
 
 
-	def punch(fight, from, to)
+	def hammerfist(fight, from, to)
 		if_is_active(fight) do
-			to.fights_hp[fight.title] -= 5
+			base_attack = 5
+			result, damage = calculate_damage base_attack
+
+			to.fights_hp[fight.title] -= damage
 			to_hp = to.fights_hp[fight.title]
 			to.save
-			return "#{from.user_name} punches #{to.user_name}! -5HP #{to_hp}/#{TotalHitPoints}"
+			return "#{from.user_name} hammerfists #{to.user_name}! #{result}, -#{damage}HP #{to_hp}/#{TotalHitPoints}"
 		end
 	end
+
+	def block(fight, from, to)
+		
+	end
+
 
 end
