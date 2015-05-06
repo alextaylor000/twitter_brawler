@@ -11,6 +11,7 @@ class Fight
 	key :title, String # so we can identify a fight based on both usernames but without looking up challenger and challenged
 	key :challenger, String
 	key :challenged, String
+	key :initiative, String
 
 	many :fight_actions
 end

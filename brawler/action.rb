@@ -48,7 +48,6 @@ class Action
 
 	# Return the winner of the fight, or false if win condition not yet met
 	def check_for_winner
-
 	
 		if @from.fights_hp[@title] <= 0 
 			return @to
@@ -89,7 +88,11 @@ class Action
 		
 		if fight.nil? \
 			or fight.status == "won"
-			fight = Fight.new(:title => @title, :status => "inactive", :challenger => @from.user_name, :challenged => @to.user_name)
+			fight = Fight.new(:title => @title, \
+								:status => "inactive", \
+								:challenger => @from.user_name, \
+								:challenged => @to.user_name, \
+								:initiative => @from.user_name) 
 			fight.save
 
 			debug "new fight created: #{@title} <#{fight.id}>"
