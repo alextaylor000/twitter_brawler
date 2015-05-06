@@ -73,6 +73,7 @@ module Moves
 		# TODO: is there a better way of accomplishing what I'm trying to do here?
 		if fight.status == "active"
 			yield
+		
 		else
 			return false
 		end

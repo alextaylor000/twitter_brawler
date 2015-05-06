@@ -85,6 +85,10 @@ class Action
 
 		result = "Invalid move #{@type}" if result == false
 
+
+		result.last.replace (result.last + " #{@fight.initiative}'s move...") unless result.empty?
+		
+
 		# check players' hp for death condition
 		if @fight.status == "active"
 			winner = check_for_winner
