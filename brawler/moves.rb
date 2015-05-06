@@ -33,10 +33,35 @@ def calculate_damage(base_attack)
 	return result, damage
 end
 
+# Returns damage dealt when a move is blocked
+def calculate_block(base_attack)
+	roll = roll_dice
+
+	case roll
+		when 1..6
+			result = "block"
+			mult = 0.5
+
+		when 7..20
+			result = "fail"
+			mult = 1
+	end
+
+	damage = (base_attack * mult).round
+	return result, damage
+end
+
 module Moves
 	# moves should have three aguments: fight, from, to
 	# they should return a result that can be tweeted
-	# every move's logic should be passed as a block to if_is_active
+	# every move's logic should be passed as a block to if_is_active,
+	# so that a waiting or won fight can't be used improperly
+
+	# register the moves in here to track their base attacks
+	AttackPoints = {
+		:hammerfist => 5,
+
+	}
 
 	# default action for missing methods
 	def method_missing(method_name, *args, &block)
@@ -73,7 +98,7 @@ module Moves
 
 			# add hp to the fighters for this specific fight
 			from.fights_hp[fight.title] 	= TotalHitPoints
-			to.fights_hp[fight.title] 	= TotalHitPoints
+			to.fights_hp[fight.title] 		= TotalHitPoints
 
 			from.save
 			to.save
@@ -87,7 +112,7 @@ module Moves
 
 	def hammerfist(fight, from, to)
 		if_is_active(fight) do
-			base_attack = 5
+			base_attack = AttackPoints[:hammerfist]
 			result, damage = calculate_damage base_attack
 
 			to.fights_hp[fight.title] -= damage
@@ -98,7 +123,23 @@ module Moves
 	end
 
 	def block(fight, from, to)
-		
+		if_is_active(fight) do
+			pending_move_type = fight.pending_move[:type]
+			pending_move_base_attack = AttackPoints[pending_move_type.to_sym]
+
+			result, damage = calculate_block pending_move_base_attack
+
+			from.fights_hp[fight.title] -= damage
+			from_hp = from.fights_hp[fight.title]
+			from.save			
+
+			if result == "block"
+				return "#{from.user_name} blocks #{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP #{from_hp}/#{TotalHitPoints}"
+			elsif result == "fail"
+				return "#{from.user_name}'s block fails against #{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP #{from_hp}/#{TotalHitPoints}"
+			end
+					
+		end
 	end
 
 

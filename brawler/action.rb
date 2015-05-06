@@ -25,11 +25,53 @@ class Action
 
 	# Execute the current action. Return the result, and check for win conditions.
 	def execute
-		
 		debug "execute action #{@type.to_sym}"
 
+		result = []
+		
+		# Execute the move only if the user who requested it has initiative.
+
+		# If there's no pending move in the fight (e.g. the first move in the fight), store
+		# the move in @fight.pending_move so that the receiving user has a chance to respond
+
+		# When the other user responds, the pending move will either be turned into a block,
+		# or it will be executed before the receiving user's attack
 		if @fight.initiative == @from.user_name
-			result = self.__send__(@type.to_sym, @fight, @from, @to) # execute the Move
+			
+			#byebug
+			if @fight.pending_move.empty?
+# TODO:
+#				case @type
+#				end
+
+				if @type == "block"
+					result << "No move to block!"
+
+				elsif @type == "challenge" or @type == "accept"
+					result << self.__send__(@type.to_sym, @fight, @from, @to)
+
+				else
+					# add the current move to fight.pending_move
+					@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
+					@fight.save
+				end
+
+			else
+				if @type == "block"
+					result << self.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
+
+					reset_pending_move
+				else
+					pending_move_type 	= @fight.pending_move[:type]
+					pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
+					pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
+
+					result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
+					result << self.__send__(@type.to_sym, @fight, @from, @to) # execute the current move
+
+					reset_pending_move
+				end				
+			end
 
 			if result
 				@fight.initiative = @to.user_name # initiative goes to other player after a successful move
@@ -37,7 +79,8 @@ class Action
 			end
 
 		else
-			result = "It's not your turn!"
+			# If the requesting user doesn't have initiative
+			result << "It's not your turn!"
 		end
 
 		result = "Invalid move #{@type}" if result == false
@@ -46,7 +89,7 @@ class Action
 		if @fight.status == "active"
 			winner = check_for_winner
 			if winner
-				result = [result, "#{winner.user_name} wins! +XP"]
+				result << "#{winner.user_name} wins! +XP"
 				@fight.status = "won"
 				@fight.save
 			end
@@ -72,6 +115,11 @@ class Action
 	def save_log
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
 		@fight.save!
+	end
+
+	def reset_pending_move
+		@fight.pending_move = {}
+		@fight.save
 	end
 
 	# Returns a Fighter object from the database based on the username
