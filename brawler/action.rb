@@ -30,8 +30,12 @@ class Action
 
 		if @fight.initiative == @from.user_name
 			result = self.__send__(@type.to_sym, @fight, @from, @to) # execute the Move
-			@fight.initiative = @to.user_name # initiative goes to other player after a successful move
-			save_log unless result == false
+
+			if result
+				@fight.initiative = @to.user_name # initiative goes to other player after a successful move
+				save_log # add it to the fight log
+			end
+
 		else
 			result = "It's not your turn!"
 		end
