@@ -8,9 +8,9 @@ require File.expand_path(File.dirname(__FILE__) + '/config') 	# models.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# brawler.rb
 
 ### TESTS
-def test_execute(command)
-	puts "> #{command}"
-	action = Action.new command
+def test_execute(from, text, to)
+	puts "> #{from} #{text} #{to}"
+	action = Action.new from, text, to
 	result = action.execute
 	puts result
 end
@@ -19,32 +19,13 @@ def reset_db
 	# for testing
 	Fight.destroy_all
 	Fighter.destroy_all	
+	TweetQueue.destroy_all
 end
 
-def test_u1_vs_u2
-	reset_db
-	test_execute "u1 challenge u2"
-	test_execute "u2 accept u1"
-	test_execute "u1 hammerfist u2"
-	test_execute "u2 hammerfist u1"
-	test_execute "u1 hammerfist u2"
-	test_execute "u1 hammerfist u2"
-	test_execute "u2 hammerfist u1"
-end
-
-def test_blocking
-	reset_db
-	test_execute "user1 challenge user2"
-	test_execute "user2 accept user1"
-	test_execute "user1 hammerfist user2"
-	test_execute "user2 block user1"
-end
 
 def test_threading
 	reset_db
-	test_execute "u1 challenge u2"
-	test_execute "u2 accept u1"
-	test_execute "u1 hammerfist u2"
+	test_execute "u1", "challenge", "u2"
 end
 
 reset_db

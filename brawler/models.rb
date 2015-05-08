@@ -41,7 +41,8 @@ class TweetQueue
 	include MongoMapper::Document
 	# stores tweets created by an action that are waiting to be sent
 
-	key :tweet_text, String
+	key :text, String
+	key :source_id, Integer
 
 	timestamps!
 end

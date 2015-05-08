@@ -84,7 +84,7 @@ module Moves
 		if fight.status == "inactive"
 			fight.status = "waiting"
 			fight.save
-			return "#{to.user_name}: #{from.user_name} has challenged you! accept?"
+			return "@#{to.user_name}: @#{from.user_name} has challenged you! accept?"
 		end
 
 	end

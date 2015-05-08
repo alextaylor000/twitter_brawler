@@ -15,12 +15,21 @@ class Action
 	# from: the user who sent the tweet
 	# text: the full text of the tweet, for parsing
 	# to: who the user tweeted at - their challenger
-	def initialize(from, text, to)
-		inputs 	= input.split " "
+	def initialize(from, text, to, tweet)
+		inputs 	= text.split " "
+		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
 
-		@from 	= get_fighter inputs[0]		# assign a fighter object or create one
-		@type 	= inputs[1...-1].join("_")
-		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
+		@from 	= get_fighter from		# assign a fighter object or create one
+		@type 	= nil # stub for grabbing the type in the block below
+
+		inputs.each do |i|
+			next if i.include? "@"
+			@type = i 	# assign the type as the first keyword that's not a mention
+			break 		# stop analyzing after the first keyword (to allow random characters at the end of the tweet)
+		end
+
+		@to   	= get_fighter to	# assign a fighter object or create one
+
 
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
@@ -121,7 +130,9 @@ class Action
 			end
 		end
 
-		return result
+		#return result
+		debug "storing tweet"
+		store_tweets result
 
 	end
 
@@ -235,6 +246,19 @@ class Action
 		end
 
 		return fight
+	end
+
+	# Stores a tweet in the TweetQueue model so that the bot can access it
+	def store_tweets (tweets)
+
+		tweets.each do |t|
+			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
+			new_tweet.save
+
+			debug "saved tweet to db"
+		end
+
+	
 	end
 
 end

@@ -39,6 +39,7 @@ class TwitterBot
 						# tweet.user_mentions.first.screen_name = "twtfu", for example
 
 					debug "#{tweet.text}"
+
 					process tweet
 					
 				end
@@ -46,17 +47,23 @@ class TwitterBot
 				# update chatterbot config. this is apparently required
 				update_config
 
-				sleep 5
+				sleep 10
 
 			rescue Twitter::Error::TooManyRequests => error
 				sleep_seconds = error.rate_limit.reset_in + 10
 				debug "~~ RATE LIMITED, sleeping for #{sleep_seconds} ~~"
 				sleep sleep_seconds
-			end
+			end # begin/rescue
 
-		end
+		# send tweets every loop
+		# TODO: this will be rate-limited by the replies block above. is this a problem?
+		debug "running send_tweets"
+		send_tweets
+
+		end # loop
 	
 	end # listen
+
 
 	# Forks a new thread to execute the action
 	def process (tweet)
@@ -66,7 +73,8 @@ class TwitterBot
 
   		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
   		Thread.new {
-	  		action = Action.new input
+  			debug "init action #{from}, #{text}, #{to}"
+	  		action = Action.new from, text, to, tweet
 
 	  		if action.fight
 		  		action.execute
@@ -76,11 +84,38 @@ class TwitterBot
 	end
 
 	# Send a tweet on behalf of the bot.
-	def send (text)
-	end
-end
+	def send_tweets
+		#byebug
+		tweets = TweetQueue.all
+		
+		tweets.each do |tweet|
+			
+			text 			= tweet.text
+			#byebug
+			tweet_source 	= {:id => tweet.source}
+			
+			debug "sending tweet: #{text}"
+			#byebug
+			reply text, tweet_source
+			tweet.destroy
+
+		end # tweets.each
+	
+		sleep 5
+
+	end # send_tweets
+end # class TwitterBot
 
 # runtime
+
+# reset db for testing
+Fight.destroy_all
+Fighter.destroy_all	
+TweetQueue.destroy_all
+
+
 bot = TwitterBot.new
+debug "loading bot.listen..."
 bot.listen
+
 
