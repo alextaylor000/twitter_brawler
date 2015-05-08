@@ -15,9 +15,13 @@ class Action
 	# from: the user who sent the tweet
 	# text: the full text of the tweet, for parsing
 	# to: who the user tweeted at - their challenger
-	def initialize(from, text, to, tweet)
+	def initialize(from, text, to, tweet=nil)
 		inputs 	= text.split " "
 		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
+
+		if tweet == nil
+			@tweet = {:id => 1} # for console testing
+		end
 
 		@from 	= get_fighter from		# assign a fighter object or create one
 		@type 	= nil # stub for grabbing the type in the block below
