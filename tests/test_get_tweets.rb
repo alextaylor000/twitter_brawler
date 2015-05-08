@@ -3,8 +3,10 @@ require 'byebug'
 
 # authenticate
 client = Twitter::REST::Client.new do |config|
-	config.consumer_key		= "zDmEO0YsvZE0T5xd6bRzBUXwo"
-	config.consumer_secret	= "d3yJLYDSFiF1rliVZKdR3yARlrr8hAextuJpdcUMgOXhT8mucV"
+	config.consumer_key			= "e6IZLNgC4tFd7EzMOW0PepruG"
+	config.consumer_secret 		= "tI4UQog02tRsDMgDuJP9X2ZE9DoJM2K5rEGbXSaWPDN8qw9gT2"
+#	config.access_token			= "3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM"
+#	config.access_token_secret	= "LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp"
 end
 
 # get some tweets

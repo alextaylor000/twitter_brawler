@@ -2,10 +2,10 @@ require 'twitter'
 require 'byebug'
 
 streamclient = Twitter::Streaming::Client.new do |config|
-	config.consumer_key			= "zDmEO0YsvZE0T5xd6bRzBUXwo"
-	config.consumer_secret 		= "d3yJLYDSFiF1rliVZKdR3yARlrr8hAextuJpdcUMgOXhT8mucV"
-	config.access_token			= "24545446-ttxdsom9ZWuResP7RBb65pz9tqydkRX4I2aobw6SX"
-	config.access_token_secret	= "ZElRBLttQhVYGEluEC6WlQWBE5eqwnwpP8nL1jQ2ZY4Uk"
+	config.consumer_key			= "e6IZLNgC4tFd7EzMOW0PepruG"
+	config.consumer_secret 		= "tI4UQog02tRsDMgDuJP9X2ZE9DoJM2K5rEGbXSaWPDN8qw9gT2"
+	config.access_token			= "3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM"
+	config.access_token_secret	= "LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp"
 end
 
 # filter creates an endless stream
