@@ -20,29 +20,47 @@ class TwitterBot
 		secret 'LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp' 
 		token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'
 
-		streaming replies:"all" do
+		# ignore tweets before and including this ID
+		#since_id 596544746069368832
 
-			replies do |tweet|
-				# tweet.in_reply_to_screen_name = "twtfu"
-				# tweet.text = full text of the tweet, i.e. "@twtfu test tweet"
-				# tweet.user.screen_name = the sender of the tweet, i.e. "twtfu_test0001"
-				# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
-					# tweet.user_mentions.first.screen_name = "twtfu", for example
-				#process tweet
+		debug "init listen"
 
-				debug ">> #{tweet.text}"
-				byebug
+		loop do
+			begin
+				debug "..."
+				# https://dev.twitter.com/rest/reference/get/statuses/mentions_timeline
+				# Rate: 15 requests / 15 minutes
+
+				replies do |tweet|
+					# tweet.in_reply_to_screen_name = "twtfu"
+					# tweet.text = full text of the tweet, i.e. "@twtfu test tweet"
+					# tweet.user.screen_name = the sender of the tweet, i.e. "twtfu_test0001"
+					# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
+						# tweet.user_mentions.first.screen_name = "twtfu", for example
+
+					debug "#{tweet.text}"
+					process tweet
+					
+				end
+
+				# update chatterbot config. this is apparently required
+				update_config
+
+				sleep 5
+
+			rescue Twitter::Error::TooManyRequests => error
+				sleep_seconds = error.rate_limit.reset_in + 10
+				debug "~~ RATE LIMITED, sleeping for #{sleep_seconds} ~~"
+				sleep sleep_seconds
 			end
 
-		end		
-	end
+		end
+	
+	end # listen
 
 	# Forks a new thread to execute the action
 	def process (tweet)
-		tweet.user_mentions.each do |mention|
-
-		end
-
+		to = tweet.user_mentions.last.screen_name # for now, assume the last mention is the correct person
 		from = tweet.user.screen_name
 		text = tweet.text
 
@@ -51,8 +69,7 @@ class TwitterBot
 	  		action = Action.new input
 
 	  		if action.fight
-		  		result = action.execute
-		  		puts result
+		  		action.execute
 		  	end
 	  	}
 
