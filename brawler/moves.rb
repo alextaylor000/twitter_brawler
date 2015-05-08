@@ -79,12 +79,19 @@ module Moves
 		end
 	end
 	
+	# Return a random string, for keeping things interesting
+	def one_of(*text)
+		return text[rand(text.count)]
+	end
+
 	# challenge a player to a match
 	def challenge(fight, from, to)
 		if fight.status == "inactive"
 			fight.status = "waiting"
 			fight.save
-			return "@#{to.user_name}: @#{from.user_name} has challenged you! accept?"
+			return one_of "@#{to.user_name}: @#{from.user_name} wishes to engage you in glorious combat. Reply 'accept' to begin.", \
+							"@#{to.user_name}: @#{from.user_name} has declared battle! Reply 'accept' to begin.", \
+							"@#{to.user_name}: @#{from.user_name} challenges you to a duel. Reply 'accept' to begin."
 		end
 
 	end
@@ -104,8 +111,9 @@ module Moves
 			from.save
 			to.save
 
-
-			return "fight accepted. FIGHT!"
+			return one_of "@#{from.user_name} and @#{to.user_name}: prepare for battle!", \
+							"@#{from.user_name} and @#{to.user_name} are locked in combat!", \
+							"@#{from.user_name} contemplates @#{to.user_name}'s destruction."
 
 		end
 	end
@@ -119,7 +127,7 @@ module Moves
 			to.fights_hp[fight.title] -= damage
 			to_hp = to.fights_hp[fight.title]
 			to.save
-			return "#{from.user_name}'s hammerfist strikes #{to.user_name}! #{result}, -#{damage}HP #{to_hp}/#{TotalHitPoints}"
+			return "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
 		end
 	end
 
@@ -135,9 +143,9 @@ module Moves
 			from.save			
 
 			if result == "block"
-				return "#{from.user_name} blocks #{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP #{from_hp}/#{TotalHitPoints}"
+				return "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 			elsif result == "fail"
-				return "#{from.user_name}'s block fails against #{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP #{from_hp}/#{TotalHitPoints}"
+				return "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 			end
 					
 		end

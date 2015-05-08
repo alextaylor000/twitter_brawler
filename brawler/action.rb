@@ -1,12 +1,23 @@
 # action.rb
 # An Action is created by a tweet; it controls the interaction between the user and the models
 
-require 'timeout'	# for the delay in processing moves
+require 'timeout' # required to process pending moves
 require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
-ActionGracePeriodSeconds = 8	# wait this many seconds for a block before executing a move
+ActionGracePeriodSeconds = 10	# wait this many seconds for a block before executing a move
+
+# TestTweet provides a fake id to pass into the store_tweet method for debugging purposes
+class TestTweet
+	def initialize(id)
+		@id = id
+	end
+
+	def id
+		return @id
+	end
+end
 
 class Action
 	include Moves
@@ -20,7 +31,7 @@ class Action
 		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
 
 		if tweet == nil
-			@tweet = {:id => 1} # for console testing
+			@tweet = TestTweet.new(1) # for console testing
 		end
 
 		@from 	= get_fighter from		# assign a fighter object or create one
@@ -28,8 +39,8 @@ class Action
 
 		inputs.each do |i|
 			next if i.include? "@"
-			@type = i 	# assign the type as the first keyword that's not a mention
-			break 		# stop analyzing after the first keyword (to allow random characters at the end of the tweet)
+			@type = i.downcase 	# assign the type as the first keyword that's not a mention
+			break 				# stop analyzing after the first keyword (to allow random characters at the end of the tweet)
 		end
 
 		@to   	= get_fighter to	# assign a fighter object or create one
@@ -55,7 +66,7 @@ class Action
 		# When the other user responds, the pending move will either be turned into a block,
 		# or it will be executed before the receiving user's attack
 
-
+		debug "save log for #{@from}, #{@type}, #{@to}"
 		save_log # add it to the fight log
 		# TODO: we'll probably eventually want to filter this log a little more and record just the real moves
 
@@ -64,7 +75,7 @@ class Action
 			if @fight.pending_move.empty?
 
 				if @type == "block"
-					result << "No move to block!"
+					result << "No move to block!" # TODO: when would this get triggered? I forget...
 
 				elsif @type == "challenge" or @type == "accept"
 					result << self.__send__(@type.to_sym, @fight, @from, @to)
@@ -119,7 +130,7 @@ class Action
 			debug "Invalid move #{@type}"
 		else
 
-			result.last.replace (result.last + " #{@fight.initiative}'s move...") unless result.empty?
+			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
 		end
 		
 		
@@ -135,7 +146,7 @@ class Action
 		end
 
 		#return result
-		debug "storing tweet"
+		debug "storing tweet(s) #{result}"
 		store_tweets result
 
 	end
@@ -161,6 +172,8 @@ class Action
 	def save_log
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
 		@fight.save!
+		debug "save_log last move: #{@fight.fight_actions.last.move}"
+
 	end
 
 	# Waits for a 'block' move, otherwise executes the move
@@ -172,7 +185,9 @@ class Action
 			status = Timeout::timeout(ActionGracePeriodSeconds) {
 			  while true do 
 			  	# check for a 'block' move being inserted into the database
+			  	debug "last move: #{@fight.fight_actions.last.move}"
 			  	blocked = true if @fight.fight_actions.last.move == "block"
+			  	sleep 1
 			  end
 			}
 

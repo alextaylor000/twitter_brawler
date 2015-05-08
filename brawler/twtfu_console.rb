@@ -22,14 +22,13 @@
 # an invalid method name passed to Moves will trigger the method_missing
 # method within Moves
 
+Thread.abort_on_exception=true # for debugging
+
 require 'byebug' 		# for debugging
 
 require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# config.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# action.rb
-
-
-
 
 
 
@@ -59,7 +58,8 @@ class Listener
 		  	if !input.empty?
 		  		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
 		  		Thread.new {
-			  		action = Action.new input
+		  			input_split = input.split(" ")
+			  		action = Action.new input_split[0], input_split[1], input_split[2]
 
 			  		if action.fight
 				  		result = action.execute
@@ -80,6 +80,8 @@ end # class Listener
 # for testing
 Fight.destroy_all
 Fighter.destroy_all
+TweetQueue.destroy_all
+
 
 # CONSOLE MODE
 listener = Listener.new
