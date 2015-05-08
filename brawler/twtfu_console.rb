@@ -62,7 +62,7 @@ class Listener
 		  else
 		  	if !input.empty?
 		  		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
-		  		Thread.new
+		  		Thread.new {
 			  		action = Action.new input
 
 			  		if action.fight

@@ -1,0 +1,9 @@
+attack: dice + base_attack 
+
+
+
+dice (out of 20)
+    1 - 3 miss
+	3 - 10 graze
+	10 - 19 hit
+	20	crit

@@ -1,9 +1,11 @@
 # action.rb
 # An Action is created by a tweet; it controls the interaction between the user and the models
 
+require 'timeout'	# for the delay in processing moves
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
+ActionGracePeriodSeconds = 8	# wait this many seconds for a block before executing a move
 
 class Action
 	include Moves
@@ -35,12 +37,14 @@ class Action
 
 		# When the other user responds, the pending move will either be turned into a block,
 		# or it will be executed before the receiving user's attack
+
+
+		save_log # add it to the fight log
+		# TODO: we'll probably eventually want to filter this log a little more and record just the real moves
+
 		if @fight.initiative == @from.user_name
 			
 			if @fight.pending_move.empty?
-# TODO:
-#				case @type
-#				end
 
 				if @type == "block"
 					result << "No move to block!"
@@ -52,6 +56,13 @@ class Action
 					# add the current move to fight.pending_move
 					debug "set pending move"
 					set_pending_move
+
+					# pass the initiative to the other player before waiting for a block					
+					@fight.initiative = @to.user_name # initiative goes to other player after a successful move
+					@fight.save
+
+					# process the move; wait to see if a block is received
+					result << process_move
 				end
 
 			else # a pending action is present
@@ -67,22 +78,21 @@ class Action
 					result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
 					
 					# store the current move as the new pending move
-					debug "set pending move"
-					set_pending_move
-
+					result << set_pending_move					
 				end				
 			end
 
-			byebug
 			if result.any?
 				debug "initiative #{@to.user_name}"
 				@fight.initiative = @to.user_name # initiative goes to other player after a successful move
-				save_log # add it to the fight log
+				@fight.save
+				
 			end
 
 		else
 			# If the requesting user doesn't have initiative
 			#result << "It's not your turn!"
+			
 			debug "Not your turn"
 		end
 
@@ -134,16 +144,40 @@ class Action
 		@fight.save!
 	end
 
-	def set_pending_move
+	# Waits for a 'block' move, otherwise executes the move
+	def process_move
+		blocked = false
 
-		if Moves.instance_methods.include? @type.to_sym
-			@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
-			@fight.save		
+		begin
+			debug "processing move, waiting for block..."
+			status = Timeout::timeout(ActionGracePeriodSeconds) {
+			  while true do 
+			  	# check for a 'block' move being inserted into the database
+			  	blocked = true if @fight.fight_actions.last.move == "block"
+			  end
+			}
 
-		else
-			debug "Invalid move #{@type}"
+		rescue Timeout::Error
+			# intentional stub; we're really looking to pass through to ensure
+		ensure
+			if blocked
+				debug "blocked! processing block"
+				@type = "block"
+				
+			else
+				debug "not blocked! processing action"
+				reset_pending_move 
+			end
+			
+			return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move - it will either be 'block' or the original move type
+
 		end
+	end
 
+	def set_pending_move
+		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
+		@fight.save		
+		return "#{@from.user_name} attacks #{@to.user_name} with #{@type}. block or attack?"
 	end
 
 	def reset_pending_move

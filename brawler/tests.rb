@@ -39,10 +39,15 @@ def test_blocking
 	test_execute "user2 block user1"
 end
 
+def test_threading
+	reset_db
+	test_execute "u1 challenge u2"
+	test_execute "u2 accept u1"
+	test_execute "u1 hammerfist u2"
+end
+
 reset_db
 
 ### RUN TESTS
-test_u1_vs_u2
-puts "****"
-test_blocking
+test_threading
 
