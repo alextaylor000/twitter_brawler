@@ -19,7 +19,6 @@ class Action
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
 		
-
 		debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
 
@@ -28,7 +27,7 @@ class Action
 		debug "execute action #{@type.to_sym}"
 
 		result = []
-		
+
 		# Execute the move only if the user who requested it has initiative.
 
 		# If there's no pending move in the fight (e.g. the first move in the fight), store
@@ -38,7 +37,6 @@ class Action
 		# or it will be executed before the receiving user's attack
 		if @fight.initiative == @from.user_name
 			
-			#byebug
 			if @fight.pending_move.empty?
 # TODO:
 #				case @type
@@ -52,7 +50,8 @@ class Action
 
 				else
 					# add the current move to fight.pending_move
-					result << set_pending_move
+					debug "set pending move"
+					set_pending_move
 				end
 
 			else # a pending action is present
@@ -68,25 +67,34 @@ class Action
 					result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
 					
 					# store the current move as the new pending move
-					result << set_pending_move
+					debug "set pending move"
+					set_pending_move
 
 				end				
 			end
 
-			if result
+			byebug
+			if result.any?
+				debug "initiative #{@to.user_name}"
 				@fight.initiative = @to.user_name # initiative goes to other player after a successful move
 				save_log # add it to the fight log
 			end
 
 		else
 			# If the requesting user doesn't have initiative
-			result << "It's not your turn!"
+			#result << "It's not your turn!"
+			debug "Not your turn"
 		end
 
-		result = "Invalid move #{@type}" if result == false
+		
 
+		if result == false
+			debug "Invalid move #{@type}"
+		else
 
-		result.last.replace (result.last + " #{@fight.initiative}'s move...") unless result.empty?
+			result.last.replace (result.last + " #{@fight.initiative}'s move...") unless result.empty?
+		end
+		
 		
 
 		# check players' hp for death condition
@@ -115,6 +123,11 @@ class Action
 		end
 	end
 
+	# Return the fight object
+	def fight
+		@fight
+	end
+
 	# Update the fight log; this stores each move in the fight
 	def save_log
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
@@ -122,9 +135,15 @@ class Action
 	end
 
 	def set_pending_move
-		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
-		@fight.save		
-		return "#{@from.user_name} attacks #{@to.user_name} with #{@type}. block or attack?"
+
+		if Moves.instance_methods.include? @type.to_sym
+			@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
+			@fight.save		
+
+		else
+			debug "Invalid move #{@type}"
+		end
+
 	end
 
 	def reset_pending_move
@@ -156,14 +175,22 @@ class Action
 		
 		if fight.nil? \
 			or fight.status == "won"
-			fight = Fight.new(:title => @title, \
-								:status => "inactive", \
-								:challenger => @from.user_name, \
-								:challenged => @to.user_name, \
-								:initiative => @from.user_name) 
-			fight.save
 
-			debug "new fight created: #{@title} <#{fight.id}>"
+			if @type == "challenge"
+				fight = Fight.new(:title => @title, \
+									:status => "inactive", \
+									:challenger => @from.user_name, \
+									:challenged => @to.user_name, \
+									:initiative => @from.user_name) 
+				fight.save
+
+				debug "new fight created: #{@title} <#{fight.id}>"
+			else
+				fight = false
+				debug "invalid command, need to issue 'challenge' first"
+			end
+
+			
 					
 		else
 			debug "using existing fight #{@title} <#{fight.id}>"

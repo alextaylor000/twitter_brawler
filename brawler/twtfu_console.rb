@@ -27,7 +27,7 @@ require 'byebug' 		# for debugging
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# config.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# action.rb
 
-DEBUG = false
+DEBUG = true
 
 
 def debug(msg)
@@ -61,10 +61,15 @@ class Listener
 
 		  else
 		  	if !input.empty?
+		  		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
+		  		#Thread.new
+			  		action = Action.new input
 
-		  		action = Action.new input
-		  		result = action.execute
-		  		puts result
+			  		if action.fight
+				  		result = action.execute
+				  		puts result
+				  	end
+			  	#}
 		  	end
 
 		  	# tweet the result
