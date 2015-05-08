@@ -25,17 +25,27 @@ class TwitterBot
 			replies do |tweet|
 				# tweet.in_reply_to_screen_name = "twtfu"
 				# tweet.text = full text of the tweet, i.e. "@twtfu test tweet"
+				# tweet.user.screen_name = the sender of the tweet, i.e. "twtfu_test0001"
 				# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
 					# tweet.user_mentions.first.screen_name = "twtfu", for example
+				#process tweet
 
 				debug ">> #{tweet.text}"
+				byebug
 			end
 
 		end		
 	end
 
 	# Forks a new thread to execute the action
-	def spawn_action
+	def process (tweet)
+		tweet.user_mentions.each do |mention|
+
+		end
+
+		from = tweet.user.screen_name
+		text = tweet.text
+
   		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
   		Thread.new {
 	  		action = Action.new input
@@ -45,7 +55,7 @@ class TwitterBot
 		  		puts result
 		  	end
 	  	}
-		
+
 	end
 
 	# Send a tweet on behalf of the bot.

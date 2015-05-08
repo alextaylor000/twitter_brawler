@@ -12,7 +12,10 @@ class Action
 	include Moves
 
 	# Initialize an action; get all relevant objects and retrieve the action type from the string
-	def initialize(input)
+	# from: the user who sent the tweet
+	# text: the full text of the tweet, for parsing
+	# to: who the user tweeted at - their challenger
+	def initialize(from, text, to)
 		inputs 	= input.split " "
 
 		@from 	= get_fighter inputs[0]		# assign a fighter object or create one
