@@ -24,17 +24,13 @@
 
 require 'byebug' 		# for debugging
 
+require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# config.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# action.rb
 
-DEBUG = true
 
 
-def debug(msg)
-	if DEBUG
-		puts "* #{msg}"
-	end
-end
+
 
 
 ### ACTIONS AND CONTROLLERS

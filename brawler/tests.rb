@@ -3,6 +3,7 @@
 # Commands should be of the format "from_user action to_user", e.g. "user1 punch user2"
 require 'byebug'
 
+require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# models.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# brawler.rb
 

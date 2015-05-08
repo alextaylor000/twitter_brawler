@@ -2,6 +2,7 @@
 # An Action is created by a tweet; it controls the interaction between the user and the models
 
 require 'timeout'	# for the delay in processing moves
+require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
