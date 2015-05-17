@@ -1,23 +1,50 @@
 # action.rb
 # An Action is created by a tweet; it controls the interaction between the user and the models
 
-require 'timeout'	# for the delay in processing moves
+require 'timeout' # required to process pending moves
 require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
-ActionGracePeriodSeconds = 8	# wait this many seconds for a block before executing a move
+ActionGracePeriodSeconds = 10	# wait this many seconds for a block before executing a move
+
+# TestTweet provides a fake id to pass into the store_tweet method for debugging purposes
+class TestTweet
+	def initialize(id)
+		@id = id
+	end
+
+	def id
+		return @id
+	end
+end
 
 class Action
 	include Moves
 
 	# Initialize an action; get all relevant objects and retrieve the action type from the string
-	def initialize(input)
-		inputs 	= input.split " "
+	# from: the user who sent the tweet
+	# text: the full text of the tweet, for parsing
+	# to: who the user tweeted at - their challenger
+	def initialize(from, text, to, tweet=nil)
+		inputs 	= text.split " "
+		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
 
-		@from 	= get_fighter inputs[0]		# assign a fighter object or create one
-		@type 	= inputs[1...-1].join("_")
-		@to   	= get_fighter inputs[-1]	# assign a fighter object or create one
+		if tweet == nil
+			@tweet = TestTweet.new(1) # for console testing
+		end
+
+		@from 	= get_fighter from		# assign a fighter object or create one
+		@type 	= nil # stub for grabbing the type in the block below
+
+		inputs.each do |i|
+			next if i.include? "@"
+			@type = i.downcase 	# assign the type as the first keyword that's not a mention
+			break 				# stop analyzing after the first keyword (to allow random characters at the end of the tweet)
+		end
+
+		@to   	= get_fighter to	# assign a fighter object or create one
+
 
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
@@ -39,7 +66,7 @@ class Action
 		# When the other user responds, the pending move will either be turned into a block,
 		# or it will be executed before the receiving user's attack
 
-
+		debug "save log for #{@from}, #{@type}, #{@to}"
 		save_log # add it to the fight log
 		# TODO: we'll probably eventually want to filter this log a little more and record just the real moves
 
@@ -48,7 +75,7 @@ class Action
 			if @fight.pending_move.empty?
 
 				if @type == "block"
-					result << "No move to block!"
+					result << "No move to block!" # TODO: when would this get triggered? I forget...
 
 				elsif @type == "challenge" or @type == "accept"
 					result << self.__send__(@type.to_sym, @fight, @from, @to)
@@ -99,11 +126,8 @@ class Action
 
 		
 
-		if result == false
-			debug "Invalid move #{@type}"
-		else
-
-			result.last.replace (result.last + " #{@fight.initiative}'s move...") unless result.empty?
+		if result.any?
+			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
 		end
 		
 		
@@ -118,7 +142,9 @@ class Action
 			end
 		end
 
-		return result
+		#return result
+		debug "storing tweet(s) #{result}"
+		store_tweets result
 
 	end
 
@@ -143,6 +169,7 @@ class Action
 	def save_log
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
 		@fight.save!
+		debug "save_log last move: #{@fight.fight_actions.last.move}"
 	end
 
 	# Waits for a 'block' move, otherwise executes the move
@@ -153,8 +180,11 @@ class Action
 			debug "processing move, waiting for block..."
 			status = Timeout::timeout(ActionGracePeriodSeconds) {
 			  while true do 
+			  	@fight.reload
 			  	# check for a 'block' move being inserted into the database
+			  	debug "last move: #{@fight.fight_actions.last.move}"
 			  	blocked = true if @fight.fight_actions.last.move == "block"
+			  	sleep 1
 			  end
 			}
 
@@ -162,15 +192,14 @@ class Action
 			# intentional stub; we're really looking to pass through to ensure
 		ensure
 			if blocked
-				debug "blocked! processing block"
-				@type = "block"
-				
+				# nothing should happen here because the block will be processed by the block's action thread				
 			else
 				debug "not blocked! processing action"
 				reset_pending_move 
+				return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move - it will either be 'block' or the original move type
 			end
 			
-			return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move - it will either be 'block' or the original move type
+			
 
 		end
 	end
@@ -232,6 +261,19 @@ class Action
 		end
 
 		return fight
+	end
+
+	# Stores a tweet in the TweetQueue model so that the bot can access it
+	def store_tweets (tweets)
+
+		tweets.each do |t|
+			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
+			new_tweet.save
+
+			debug "saved tweet to db"
+		end
+
+	
 	end
 
 end

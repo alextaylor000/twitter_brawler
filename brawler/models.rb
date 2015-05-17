@@ -36,3 +36,13 @@ class Fighter
 	key :xp_points, Integer
 	key :fights_hp, Hash
 end
+
+class TweetQueue
+	include MongoMapper::Document
+	# stores tweets created by an action that are waiting to be sent
+
+	key :text, String
+	key :source_id, Integer
+
+	timestamps!
+end
