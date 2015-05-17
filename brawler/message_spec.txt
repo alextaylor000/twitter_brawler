@@ -1,0 +1,4 @@
+# twitter usernames are 15 chars max
+# allowing for @twtfu and two max-length usernames, the maximum usable message length is 99 characters
+
+@twtfu @aaaaaaaaaaaaaaa @bbbbbbbbbbbbbbb ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
