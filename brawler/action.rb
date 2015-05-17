@@ -173,7 +173,6 @@ class Action
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
 		@fight.save!
 		debug "save_log last move: #{@fight.fight_actions.last.move}"
-
 	end
 
 	# Waits for a 'block' move, otherwise executes the move
@@ -184,6 +183,7 @@ class Action
 			debug "processing move, waiting for block..."
 			status = Timeout::timeout(ActionGracePeriodSeconds) {
 			  while true do 
+			  	@fight.reload
 			  	# check for a 'block' move being inserted into the database
 			  	debug "last move: #{@fight.fight_actions.last.move}"
 			  	blocked = true if @fight.fight_actions.last.move == "block"
@@ -195,15 +195,14 @@ class Action
 			# intentional stub; we're really looking to pass through to ensure
 		ensure
 			if blocked
-				debug "blocked! processing block"
-				@type = "block"
-				
+				# nothing should happen here because the block will be processed by the block's action thread				
 			else
 				debug "not blocked! processing action"
 				reset_pending_move 
+				return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move - it will either be 'block' or the original move type
 			end
 			
-			return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move - it will either be 'block' or the original move type
+			
 
 		end
 	end
