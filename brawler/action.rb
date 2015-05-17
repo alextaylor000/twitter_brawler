@@ -75,22 +75,28 @@ class Action
 			if @fight.pending_move.empty?
 
 				if @type == "block"
-					result << "No move to block!" # TODO: when would this get triggered? I forget...
+					invalid_move
 
 				elsif @type == "challenge" or @type == "accept"
 					result << self.__send__(@type.to_sym, @fight, @from, @to)
 
 				else
-					# add the current move to fight.pending_move
-					#debug "set pending move"
-					set_pending_move
+					# only process a move if it's valid
+					if Moves.instance_methods.include? @type.to_sym
+						# add the current move to fight.pending_move
+						#debug "set pending move"
+						set_pending_move
 
-					# pass the initiative to the other player before waiting for a block					
-					@fight.initiative = @to.user_name # initiative goes to other player after a successful move
-					@fight.save
+						# pass the initiative to the other player before waiting for a block					
+						@fight.initiative = @to.user_name # initiative goes to other player after a successful move
+						@fight.save
 
-					# process the move; wait to see if a block is received
-					result << process_move
+						# process the move; wait to see if a block is received
+						result << process_move
+
+					else
+						invalid_move
+					end
 				end
 
 			else # a pending action is present
@@ -99,14 +105,17 @@ class Action
 
 					reset_pending_move
 				else
-					pending_move_type 	= @fight.pending_move[:type]
-					pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
-					pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
+					# only process a move if it's valid
+					if Moves.instance_methods.include? @type.to_sym
+						pending_move_type 	= @fight.pending_move[:type]
+						pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
+						pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
 
-					result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
-					
-					# store the current move as the new pending move
-					result << set_pending_move					
+						result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
+						
+						# store the current move as the new pending move
+						result << set_pending_move		
+					end			
 				end				
 			end
 
@@ -163,6 +172,10 @@ class Action
 	# Return the fight object
 	def fight
 		@fight
+	end
+
+	# Runs when an invalid move is passed in
+	def invalid_move
 	end
 
 	# Update the fight log; this stores each move in the fight
