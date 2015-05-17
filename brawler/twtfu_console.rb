@@ -43,7 +43,7 @@ class Listener
 		puts "available commands:"
 
 		instance_methods = Moves.instance_methods false
-		puts instance_methods[2..-1]
+		puts instance_methods
 	end
 	
 	def listen_gets

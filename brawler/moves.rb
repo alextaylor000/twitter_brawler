@@ -63,35 +63,6 @@ module Moves
 
 	}
 
-	# default action for missing methods
-	def method_missing(method_name, *args, &block)
-		return false # let the controller handle notifying the user
-	end
-
-	# every normal move should be wrapped in this so that it only runs if the fight is active
-	def if_is_active(fight)
-		# TODO: is there a better way of accomplishing what I'm trying to do here?
-		if fight.status == "active"
-			yield
-
-		else
-			return false
-		end
-	end
-	
-	# Return a random string, for keeping things interesting
-	def one_of(*text)
-		string = text[rand(text.count)]
-
-		if string.length > 140
-			debug "WARNING: Tweet is #{string.length} characters: '#{string}'"
-		else
-			debug "tweet length: #{string.length}/140"
-		end
-
-		return string
-	end
-
 	# challenge a player to a match
 	def challenge(fight, from, to)
 		if fight.status == "inactive"
@@ -158,5 +129,35 @@ module Moves
 		end
 	end
 
+
+	private
+			# default action for missing methods
+			def method_missing(method_name, *args, &block)
+				return false # let the controller handle notifying the user
+			end
+
+			# every normal move should be wrapped in this so that it only runs if the fight is active
+			def if_is_active(fight)
+				# TODO: is there a better way of accomplishing what I'm trying to do here?
+				if fight.status == "active"
+					yield
+
+				else
+					return false
+				end
+			end
+			
+			# Return a random string, for keeping things interesting
+			def one_of(*text)
+				string = text[rand(text.count)]
+
+				if string.length > 140
+					debug "WARNING: Tweet is #{string.length} characters: '#{string}'"
+				else
+					debug "tweet length: #{string.length}/140"
+				end
+
+				return string
+			end
 
 end
