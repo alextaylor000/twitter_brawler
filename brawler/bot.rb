@@ -27,9 +27,9 @@ class TwitterBot
 
 		loop do
 			begin
-				debug "..."
 				# https://dev.twitter.com/rest/reference/get/statuses/mentions_timeline
 				# Rate: 15 requests / 15 minutes
+				num_replies = 0
 
 				replies do |tweet|
 					# tweet.in_reply_to_screen_name = "twtfu"
@@ -39,15 +39,16 @@ class TwitterBot
 						# tweet.user_mentions.first.screen_name = "twtfu", for example
 
 					debug "#{tweet.text}"
-
+					num_replies += 1
 					process tweet
 					
 				end
+				debug "processed #{num_replies} replies"
 
 				# update chatterbot config. this is apparently required
 				update_config
 
-				sleep 10
+				sleep 60
 
 			rescue Twitter::Error::TooManyRequests => error
 				sleep_seconds = error.rate_limit.reset_in + 10
@@ -85,23 +86,21 @@ class TwitterBot
 
 	# Send a tweet on behalf of the bot.
 	def send_tweets
-		#byebug
+		
 		tweets = TweetQueue.all
 		
 		tweets.each do |tweet|
 			
 			text 			= tweet.text
-			#byebug
+			
 			tweet_source 	= {:id => tweet.source}
 			
 			debug "sending tweet: #{text}"
-			#byebug
+			
 			reply text, tweet_source
 			tweet.destroy
 
 		end # tweets.each
-	
-		sleep 5
 
 	end # send_tweets
 end # class TwitterBot
