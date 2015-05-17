@@ -38,11 +38,11 @@ def calculate_block(base_attack)
 	roll = roll_dice
 
 	case roll
-		when 1..6
+		when 1..15
 			result = "block"
 			mult = 0.5
 
-		when 7..20
+		when 16..20
 			result = "fail"
 			mult = 1
 	end

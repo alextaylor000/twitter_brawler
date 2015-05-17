@@ -126,10 +126,7 @@ class Action
 
 		
 
-		if result == false
-			debug "Invalid move #{@type}"
-		else
-
+		if result.any?
 			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
 		end
 		
