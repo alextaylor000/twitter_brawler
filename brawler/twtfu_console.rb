@@ -49,7 +49,7 @@ class Listener
 	def listen_gets
 		while true do
 		  input = gets.chomp
-		  puts "> #{input}"
+		  #puts "> #{input}"
 
 		  if input == 'break'
 		    break

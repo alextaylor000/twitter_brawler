@@ -49,12 +49,12 @@ class Action
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
 		
-		debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
+		#debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
 
 	# Execute the current action. Return the result, and check for win conditions.
 	def execute
-		debug "execute action #{@type.to_sym}"
+		#debug "execute action #{@type.to_sym}"
 
 		result = []
 
@@ -66,7 +66,7 @@ class Action
 		# When the other user responds, the pending move will either be turned into a block,
 		# or it will be executed before the receiving user's attack
 
-		debug "save log for #{@from}, #{@type}, #{@to}"
+		#debug "save log for #{@from}, #{@type}, #{@to}"
 		save_log # add it to the fight log
 		# TODO: we'll probably eventually want to filter this log a little more and record just the real moves
 
@@ -82,7 +82,7 @@ class Action
 
 				else
 					# add the current move to fight.pending_move
-					debug "set pending move"
+					#debug "set pending move"
 					set_pending_move
 
 					# pass the initiative to the other player before waiting for a block					
@@ -111,7 +111,7 @@ class Action
 			end
 
 			if result.any?
-				debug "initiative #{@to.user_name}"
+				#debug "initiative #{@to.user_name}"
 				@fight.initiative = @to.user_name # initiative goes to other player after a successful move
 				@fight.save
 				
@@ -121,7 +121,7 @@ class Action
 			# If the requesting user doesn't have initiative
 			#result << "It's not your turn!"
 			
-			debug "Not your turn"
+			#debug "Not your turn"
 		end
 
 		
@@ -143,7 +143,7 @@ class Action
 		end
 
 		#return result
-		debug "storing tweet(s) #{result}"
+		#debug "storing tweet(s) #{result}"
 		store_tweets result
 
 	end
@@ -169,7 +169,7 @@ class Action
 	def save_log
 		@fight.fight_actions << FightAction.new(:from => @from.user_name, :move => @type, :to => @to.user_name)
 		@fight.save!
-		debug "save_log last move: #{@fight.fight_actions.last.move}"
+		#debug "save_log last move: #{@fight.fight_actions.last.move}"
 	end
 
 	# Waits for a 'block' move, otherwise executes the move
@@ -177,12 +177,12 @@ class Action
 		blocked = false
 
 		begin
-			debug "processing move, waiting for block..."
+			debug "processing #{@type}, waiting for block (#{ActionGracePeriodSeconds}s)..."
 			status = Timeout::timeout(ActionGracePeriodSeconds) {
 			  while true do 
 			  	@fight.reload
+			  	
 			  	# check for a 'block' move being inserted into the database
-			  	debug "last move: #{@fight.fight_actions.last.move}"
 			  	blocked = true if @fight.fight_actions.last.move == "block"
 			  	sleep 1
 			  end
@@ -194,7 +194,7 @@ class Action
 			if blocked
 				# nothing should happen here because the block will be processed by the block's action thread				
 			else
-				debug "not blocked! processing action"
+				#debug "not blocked! processing action"
 				reset_pending_move 
 				return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move - it will either be 'block' or the original move type
 			end
@@ -248,16 +248,16 @@ class Action
 									:initiative => @from.user_name) 
 				fight.save
 
-				debug "new fight created: #{@title} <#{fight.id}>"
+				#debug "new fight created: #{@title} <#{fight.id}>"
 			else
 				fight = false
-				debug "invalid command, need to issue 'challenge' first"
+				#debug "invalid command, need to issue 'challenge' first"
 			end
 
 			
 					
 		else
-			debug "using existing fight #{@title} <#{fight.id}>"
+			#debug "using existing fight #{@title} <#{fight.id}>"
 		end
 
 		return fight
@@ -270,7 +270,7 @@ class Action
 			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
 			new_tweet.save
 
-			debug "saved tweet to db"
+			#debug "saved tweet to db"
 		end
 
 	

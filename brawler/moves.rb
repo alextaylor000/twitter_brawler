@@ -81,7 +81,15 @@ module Moves
 	
 	# Return a random string, for keeping things interesting
 	def one_of(*text)
-		return text[rand(text.count)]
+		string = text[rand(text.count)]
+
+		if string.length > 140
+			debug "WARNING: Tweet is #{string.length} characters: '#{string}'"
+		else
+			debug "tweet length: #{string.length}/140"
+		end
+
+		return string
 	end
 
 	# challenge a player to a match
@@ -118,7 +126,6 @@ module Moves
 		end
 	end
 
-
 	def hammerfist(fight, from, to)
 		if_is_active(fight) do
 			base_attack = AttackPoints[:hammerfist]
@@ -127,7 +134,7 @@ module Moves
 			to.fights_hp[fight.title] -= damage
 			to_hp = to.fights_hp[fight.title]
 			to.save
-			return "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
+			return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
 		end
 	end
 
