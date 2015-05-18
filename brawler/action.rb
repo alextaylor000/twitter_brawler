@@ -145,7 +145,7 @@ class Action
 		if @fight.status == "active"
 			winner = check_for_winner
 			if winner
-				result << "#{winner.user_name} wins! +XP"
+				result << self.__send__(:win, @fight, @from, @to, winner.user_name)
 				@fight.status = "won"
 				@fight.save
 			end
@@ -218,6 +218,7 @@ class Action
 	end
 
 	def set_pending_move
+		# TODO: this should be removed I believe
 		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
 		@fight.save		
 		return "#{@from.user_name} attacks #{@to.user_name} with #{@type}. block or attack?"
@@ -283,7 +284,7 @@ class Action
 			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
 			new_tweet.save
 
-			#debug "saved tweet to db"
+			#debug "saved tweet to TweetQueue: #{t}"
 		end
 
 	

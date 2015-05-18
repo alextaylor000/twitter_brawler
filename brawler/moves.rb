@@ -102,7 +102,8 @@ module Moves
 			base_attack = AttackPoints[:hammerfist]
 			result, damage = calculate_damage base_attack
 
-			to.fights_hp[fight.title] -= damage
+			#to.fights_hp[fight.title] -= damage
+			apply_damage(to, damage)
 			to_hp = to.fights_hp[fight.title]
 			to.save
 			return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
@@ -121,16 +122,34 @@ module Moves
 			from.save			
 
 			if result == "block"
-				return "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
+				return one_of "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 			elsif result == "fail"
-				return "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
+				return one_of "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 			end
 					
 		end
 	end
 
+	# only called directly by Action when a fight has resolved
+	def win(fight, from, to, winner)
+		challenger_hp = from.fights_hp[@fight.title]
+		challenged_hp = to.fights_hp[@fight.title]
+
+		return one_of "@#{winner} emerges victorious! Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}"
+	end
 
 	private
+			# applies damage or makes HP 0
+			def apply_damage(target, amount)
+				if amount > target.fights_hp[fight.title]
+					target.fights_hp[fight.title] = 0
+				else
+					target.fights_hp[fight.title] -= amount
+				end
+
+				target.save
+			end
+
 			# default action for missing methods
 			def method_missing(method_name, *args, &block)
 				return false # let the controller handle notifying the user
