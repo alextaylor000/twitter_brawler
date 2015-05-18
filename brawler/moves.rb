@@ -139,6 +139,27 @@ module Moves
 		end
 	end
 
+
+	def kick(fight, from, to)
+		base_attack = AttackPoints[:kick]
+		result, damage = calculate_damage base_attack
+
+		apply_damage(to, damage)
+		to_hp = to.fights_hp[fight.title]
+		to.save
+		return one_of "@#{from.user_name}'s kick strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+	end
+
+	def palm_strike(fight, from, to)
+		base_attack = AttackPoints[:palm_strike]
+		result, damage = calculate_damage base_attack
+
+		apply_damage(to, damage)
+		to_hp = to.fights_hp[fight.title]
+		to.save
+		return one_of "@#{from.user_name}'s palm strike lands on @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"				
+	end
+
 	def hammerfist(fight, from, to)
 
 		base_attack = AttackPoints[:hammerfist]

@@ -37,15 +37,27 @@ class Action
 		@from 	= get_fighter from		# assign a fighter object or create one
 		@type 	= nil # stub for grabbing the type in the block below
 
+		keywords = []
+
+		debug "inputs: #{inputs}"
+
+		# remove mentions
+		inputs.each do |i|
+			next if i.include? "@"
+			keywords << i
+		end
+
+		debug "keywords: #{keywords}"
+
 		# check for two keywords
-		if Moves::AttackPoints.keys.include? [inputs[0], inputs[1]].join("_").to_sym
-			debug "is #{[inputs[0], inputs[1]].join("_")} a valid move?"
-			@type = [inputs[0], inputs[1]].join("_")
+		if Moves::AttackPoints.keys.include? [keywords[0], keywords[1]].join("_").to_sym
+			debug "is #{[keywords[0], keywords[1]].join("_")} a valid move?"
+			@type = [keywords[0], keywords[1]].join("_")
 		
 		# check for one keywords
-		elsif Moves::AttackPoints.keys.include? inputs[0].to_sym
-			debug "is #{inputs[0]} a valid move?"
-			@type = inputs[0]
+		elsif Moves::AttackPoints.keys.include? keywords[0].to_sym
+			debug "is #{keywords[0]} a valid move?"
+			@type = keywords[0]
 		end
 
 		@to   	= get_fighter to	# assign a fighter object or create one
