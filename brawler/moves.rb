@@ -33,6 +33,31 @@ def calculate_damage(base_attack)
 	return result, damage
 end
 
+# Returns damage dealt and type based on base attack and a roll of the dice
+# TODO: refactor, obviously
+def calculate_damage_advanced(base_attack)
+	roll = roll_dice
+
+	case roll
+		when 1..8		
+			result = "miss"
+			mult = 0
+		when 9..14		
+			result = "graze"
+			mult = 0.75
+		when 15..19
+			result = "hit"
+			mult = 1	# hit
+		when 20
+			result = "critical"
+			mult = 1.25 # critical hit!
+	end
+
+	damage = (base_attack * mult).round
+
+	return result, damage
+end
+
 # Returns damage dealt when a move is blocked
 def calculate_block(base_attack)
 	roll = roll_dice
@@ -55,10 +80,46 @@ module Moves
 	# moves should have three aguments: fight, from, to
 	# they should return a result that can be tweeted
 
+	# register the string names here. input will be searched against this list
+	StringNames = {
+		"kick",
+		"roundhouse",
+		"punch",
+		"jab",
+		"haymaker",
+		"hammerfist",
+		"palm strike",
+		"uppercut",
+
+		"eagle claw",
+		"skeleton claw",
+		"butterfly kick",
+		"thumb strike",
+		"flying kick",
+		"scorpion kick",
+		"tornado kick"
+	}
+
 	# register the moves in here to track their base attacks
 	AttackPoints = {
+		# basic
+		:kick => 5,
+		:roundhouse => 5,
+		:punch => 5,
+		:jab => 5,
+		:haymaker => 5,
 		:hammerfist => 5,
-
+		:palm_strike => 5,
+		:uppercut => 5,
+		
+		# advanced
+		:eagle_claw => 10,
+		:skeleton_claw => 10,
+		:butterfly_kick => 10,
+		:thumb_strike => 10,
+		:flying_kick => 10,
+		:scorpion_kick => 10,
+		:tornado_kick => 10
 	}
 
 	# challenge a player to a match
@@ -100,7 +161,6 @@ module Moves
 		base_attack = AttackPoints[:hammerfist]
 		result, damage = calculate_damage base_attack
 
-		#to.fights_hp[fight.title] -= damage
 		apply_damage(to, damage)
 		to_hp = to.fights_hp[fight.title]
 		to.save

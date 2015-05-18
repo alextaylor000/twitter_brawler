@@ -37,6 +37,7 @@ class Action
 		@from 	= get_fighter from		# assign a fighter object or create one
 		@type 	= nil # stub for grabbing the type in the block below
 
+		debug "inputs: #{input}"
 		inputs.each do |i|
 			next if i.include? "@"
 			@type = i.downcase 	# assign the type as the first keyword that's not a mention
@@ -106,7 +107,7 @@ class Action
 					reset_pending_move
 				else
 					# only process a move if it's valid
-					if Moves.instance_methods.include? @type.to_sym && fight_is_active?
+					if Moves.instance_methods.include? @type.to_sym and fight_is_active
 						pending_move_type 	= @fight.pending_move[:type]
 						pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
 						pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
