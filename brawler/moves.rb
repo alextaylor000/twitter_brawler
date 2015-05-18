@@ -10,20 +10,33 @@ def roll_dice
 end
 
 # Returns damage dealt and type based on base attack and a roll of the dice
-def calculate_damage(base_attack)
+def calculate_damage(base_attack, level=basic)
 	roll = roll_dice
 
+	if level == :basic
+		miss 	= 1..3
+		graze 	= 4..10
+		hit 	= 11..19
+		crit 	= 20
+	elsif level == :advanced
+		miss 	= 1..8
+		graze 	= 9..14
+		hit 	= 15..9
+		crit 	= 20
+	end
+
+
 	case roll
-		when 1..3		
+		when miss
 			result = "miss"
 			mult = 0
-		when 4..10		
+		when graze
 			result = "graze"
 			mult = 0.75
-		when 11..19
+		when hit
 			result = "hit"
 			mult = 1	# hit
-		when 20
+		when crit
 			result = "critical"
 			mult = 1.25 # critical hit!
 	end
@@ -33,30 +46,6 @@ def calculate_damage(base_attack)
 	return result, damage
 end
 
-# Returns damage dealt and type based on base attack and a roll of the dice
-# TODO: refactor, obviously
-def calculate_damage_advanced(base_attack)
-	roll = roll_dice
-
-	case roll
-		when 1..8		
-			result = "miss"
-			mult = 0
-		when 9..14		
-			result = "graze"
-			mult = 0.75
-		when 15..19
-			result = "hit"
-			mult = 1	# hit
-		when 20
-			result = "critical"
-			mult = 1.25 # critical hit!
-	end
-
-	damage = (base_attack * mult).round
-
-	return result, damage
-end
 
 # Returns damage dealt when a move is blocked
 def calculate_block(base_attack)
@@ -200,6 +189,7 @@ module Moves
 	end
 
 	private
+
 			# applies damage or makes HP 0
 			def apply_damage(target, amount)
 				if amount > target.fights_hp[fight.title]
