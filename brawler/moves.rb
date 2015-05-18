@@ -54,8 +54,6 @@ end
 module Moves
 	# moves should have three aguments: fight, from, to
 	# they should return a result that can be tweeted
-	# every move's logic should be passed as a block to if_is_active,
-	# so that a waiting or won fight can't be used improperly
 
 	# register the moves in here to track their base attacks
 	AttackPoints = {
@@ -98,36 +96,35 @@ module Moves
 	end
 
 	def hammerfist(fight, from, to)
-		if_is_active(fight) do
-			base_attack = AttackPoints[:hammerfist]
-			result, damage = calculate_damage base_attack
 
-			#to.fights_hp[fight.title] -= damage
-			apply_damage(to, damage)
-			to_hp = to.fights_hp[fight.title]
-			to.save
-			return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
-		end
+		base_attack = AttackPoints[:hammerfist]
+		result, damage = calculate_damage base_attack
+
+		#to.fights_hp[fight.title] -= damage
+		apply_damage(to, damage)
+		to_hp = to.fights_hp[fight.title]
+		to.save
+		return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
+
 	end
 
 	def block(fight, from, to)
-		if_is_active(fight) do
-			pending_move_type = fight.pending_move[:type]
-			pending_move_base_attack = AttackPoints[pending_move_type.to_sym]
 
-			result, damage = calculate_block pending_move_base_attack
+		pending_move_type = fight.pending_move[:type]
+		pending_move_base_attack = AttackPoints[pending_move_type.to_sym]
 
-			from.fights_hp[fight.title] -= damage
-			from_hp = from.fights_hp[fight.title]
-			from.save			
+		result, damage = calculate_block pending_move_base_attack
 
-			if result == "block"
-				return one_of "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
-			elsif result == "fail"
-				return one_of "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
-			end
-					
+		from.fights_hp[fight.title] -= damage
+		from_hp = from.fights_hp[fight.title]
+		from.save			
+
+		if result == "block"
+			return one_of "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
+		elsif result == "fail"
+			return one_of "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 		end
+
 	end
 
 	# only called directly by Action when a fight has resolved
@@ -156,15 +153,16 @@ module Moves
 			end
 
 			# every normal move should be wrapped in this so that it only runs if the fight is active
-			def if_is_active(fight)
-				# TODO: is there a better way of accomplishing what I'm trying to do here?
-				if fight.status == "active"
-					yield
+			# MOVED THIS INTO ACTION.RB
+			# def if_is_active(fight)
+			# 	# TODO: is there a better way of accomplishing what I'm trying to do here?
+			# 	if fight.status == "active"
+			# 		yield
 
-				else
-					return false
-				end
-			end
+			# 	else
+			# 		return false
+			# 	end
+			# end
 			
 			# Return a random string, for keeping things interesting
 			def one_of(*text)

@@ -82,7 +82,8 @@ class Action
 
 				else
 					# only process a move if it's valid
-					if Moves.instance_methods.include? @type.to_sym
+					if Moves.instance_methods.include? @type.to_sym and fight_is_active
+
 						# add the current move to fight.pending_move
 						set_pending_move
 
@@ -105,7 +106,7 @@ class Action
 					reset_pending_move
 				else
 					# only process a move if it's valid
-					if Moves.instance_methods.include? @type.to_sym
+					if Moves.instance_methods.include? @type.to_sym && fight_is_active?
 						pending_move_type 	= @fight.pending_move[:type]
 						pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
 						pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
@@ -175,9 +176,19 @@ class Action
 		@fight
 	end
 
+	def fight_is_active
+
+		if @fight.status == "active"
+			return true
+		else
+			return false
+		end
+	end
+
+
 	# Runs when an invalid move is passed in
 	def invalid_move
-		#
+		debug "invalid move"
 	end
 
 	# Update the fight log; this stores each move in the fight
