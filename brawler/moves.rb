@@ -10,7 +10,7 @@ def roll_dice
 end
 
 # Returns damage dealt and type based on base attack and a roll of the dice
-def calculate_damage(base_attack, level=basic)
+def calculate_damage(base_attack, level=:basic)
 	roll = roll_dice
 
 	if level == :basic
@@ -131,8 +131,7 @@ module Moves
 
 	def kick(fight, from, to)
 		base_attack = AttackPoints[:kick]
-		result, damage = calculate_damage base_attack
-
+		result, damage = calculate_damage base_attack, :basic
 		apply_damage(to, damage)
 		to_hp = to.fights_hp[fight.title]
 		to.save
@@ -150,14 +149,9 @@ module Moves
 	end
 
 	def hammerfist(fight, from, to)
-
-		base_attack = AttackPoints[:hammerfist]
-		result, damage = calculate_damage base_attack
-
-		apply_damage(to, damage)
-		to_hp = to.fights_hp[fight.title]
-		to.save
-		return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{move[:from]}'s hammerfist strikes @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+		#return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
 
 	end
 
@@ -189,6 +183,20 @@ module Moves
 	end
 
 	private
+			# Calculate result, apply damage, and return values needed to compose tweet.
+			def calculate_result(fight, from, to, move, level)
+				base_attack = AttackPoints[move]
+				result, damage = calculate_damage base_attack, level
+				apply_damage(to, damage)
+				to_hp = to.fights_hp[fight.title]
+				to.save
+
+				return { 	:from => from.user_name, \
+							:to => to.user_name, \
+							:result => result, \
+							:damage => damage, \
+							:to_hp => to_hp }
+			end
 
 			# applies damage or makes HP 0
 			def apply_damage(target, amount)
