@@ -55,9 +55,12 @@ class Listener
 		    break
 
 		  else
+
 		  	if !input.empty?
 		  		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
+		  		#byebug # to navigate threads: thread switch, thread stop (main thread)
 		  		Thread.new {
+		  			
 		  			input_split = input.split(" ")
 
 		  			# for test purposes, swap out the username for something 15 chars long
