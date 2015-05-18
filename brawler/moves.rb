@@ -80,28 +80,11 @@ module Moves
 	# moves should have three aguments: fight, from, to
 	# they should return a result that can be tweeted
 
-	# register the string names here. input will be searched against this list
-	StringNames = {
-		"kick",
-		"roundhouse",
-		"punch",
-		"jab",
-		"haymaker",
-		"hammerfist",
-		"palm strike",
-		"uppercut",
-
-		"eagle claw",
-		"skeleton claw",
-		"butterfly kick",
-		"thumb strike",
-		"flying kick",
-		"scorpion kick",
-		"tornado kick"
-	}
-
 	# register the moves in here to track their base attacks
 	AttackPoints = {
+		:challenge => nil,
+		:accept => nil,
+
 		# basic
 		:kick => 5,
 		:roundhouse => 5,

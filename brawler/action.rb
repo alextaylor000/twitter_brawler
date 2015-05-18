@@ -37,11 +37,15 @@ class Action
 		@from 	= get_fighter from		# assign a fighter object or create one
 		@type 	= nil # stub for grabbing the type in the block below
 
-		debug "inputs: #{input}"
-		inputs.each do |i|
-			next if i.include? "@"
-			@type = i.downcase 	# assign the type as the first keyword that's not a mention
-			break 				# stop analyzing after the first keyword (to allow random characters at the end of the tweet)
+		# check for two keywords
+		if Moves::AttackPoints.keys.include? [inputs[0], inputs[1]].join("_").to_sym
+			debug "is #{[inputs[0], inputs[1]].join("_")} a valid move?"
+			@type = [inputs[0], inputs[1]].join("_")
+		
+		# check for one keywords
+		elsif Moves::AttackPoints.keys.include? inputs[0].to_sym
+			debug "is #{inputs[0]} a valid move?"
+			@type = inputs[0]
 		end
 
 		@to   	= get_fighter to	# assign a fighter object or create one
