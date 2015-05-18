@@ -59,7 +59,13 @@ class Listener
 		  		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
 		  		Thread.new {
 		  			input_split = input.split(" ")
-			  		action = Action.new input_split[0], input_split[1], input_split[2]
+
+		  			# for test purposes, swap out the username for something 15 chars long
+		  			from = debug_replace_username input_split[0]
+		  			to = debug_replace_username input_split[2]
+
+
+			  		action = Action.new from, input_split[1], to  # from, text, to
 
 			  		if action.fight
 				  		result = action.execute
@@ -71,6 +77,11 @@ class Listener
 		  	# tweet the result
 		  end
 		end # while
+	end
+
+	def debug_replace_username(name)
+		name << "_______________"
+		return name[0..14]
 	end
 
 
