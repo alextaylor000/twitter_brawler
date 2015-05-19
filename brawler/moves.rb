@@ -99,9 +99,9 @@ module Moves
 		if fight.status == "inactive"
 			fight.status = "waiting"
 			fight.save
-			return one_of "@#{to.user_name}: @#{from.user_name} wishes to engage you in glorious combat. Reply 'accept' to begin.", \
-							"@#{to.user_name}: @#{from.user_name} has declared battle! Reply 'accept' to begin.", \
-							"@#{to.user_name}: @#{from.user_name} challenges you to a duel. Reply 'accept' to begin."
+			return one_of "@#{move[:to]}: @#{move[:from]} wishes to engage you in glorious combat. Reply 'accept' to begin.", \
+							"@#{move[:to]}: @#{move[:from]} has declared battle! Reply 'accept' to begin.", \
+							"@#{move[:to]}: @#{move[:from]} challenges you to a duel. Reply 'accept' to begin."
 		end
 
 	end
@@ -121,9 +121,9 @@ module Moves
 			from.save
 			to.save
 
-			return one_of "@#{from.user_name} and @#{to.user_name}: prepare for battle!", \
-							"@#{from.user_name} and @#{to.user_name} are locked in combat!", \
-							"@#{from.user_name} contemplates @#{to.user_name}'s destruction."
+			return one_of "@#{move[:from]} and @#{move[:to]}: prepare for battle!", \
+							"@#{move[:from]} and @#{move[:to]} are locked in combat!", \
+							"@#{move[:from]} contemplates @#{move[:to]}'s destruction."
 
 		end
 	end
@@ -140,9 +140,9 @@ module Moves
 		from.save			
 
 		if result == "block"
-			return one_of "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]} blocks @#{move[:to]}'s #{pending_move_type}; reduced to -#{move[:damage]}HP (#{from_hp}/#{TotalHitPoints})"
 		elsif result == "fail"
-			return one_of "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]}'s block fails vs @#{move[:to]}'s #{pending_move_type}, hit, -#{move[:damage]}HP (#{from_hp}/#{TotalHitPoints})"
 		end
 
 	end
@@ -152,27 +152,27 @@ module Moves
 	# OFFENSIVE MOVES ---- BASIC
 	def kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{from.user_name} kicks @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+		return one_of "@#{move[:from]} kicks @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 	end
 
 	def roundhouse(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{from.user_name} launches at @#{to.user_name} with a roundhouse kick! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+		return one_of "@#{move[:from]} launches at @#{move[:to]} with a roundhouse kick! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 	end
 
 	def punch(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{from.user_name} punches @#{to.user_name}. #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+		return one_of "@#{move[:from]} punches @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 	end
 
 	def jab(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{from.user_name} jabs @#{to.user_name}. #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+		return one_of "@#{move[:from]} jabs @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 	end
 
 	def haymaker(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{from.user_name} desperately swipes at @#{to.user_name} with a haymaker punch. #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+		return one_of "@#{move[:from]} desperately swipes at @#{move[:to]} with a haymaker punch. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 	end
 
 	def hammerfist(fight, from, to)
@@ -183,7 +183,7 @@ module Moves
 
 	def palm_strike(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{from.user_name}'s palm strike wallops @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"				
+		return one_of "@#{move[:from]}'s palm strike wallops @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"				
 	end
 
 	def uppercut(fight, from, to)

@@ -6,7 +6,7 @@ require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
-ActionGracePeriodSeconds = 0	# wait this many seconds for a block before executing a move
+ActionGracePeriodSeconds = 2	# wait this many seconds for a block before executing a move
 
 # TestTweet provides a fake id to pass into the store_tweet method for debugging purposes
 class TestTweet
