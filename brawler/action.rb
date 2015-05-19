@@ -6,7 +6,7 @@ require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
-ActionGracePeriodSeconds = 10	# wait this many seconds for a block before executing a move
+ActionGracePeriodSeconds = 0	# wait this many seconds for a block before executing a move
 
 # TestTweet provides a fake id to pass into the store_tweet method for debugging purposes
 class TestTweet
@@ -39,7 +39,6 @@ class Action
 
 		keywords = []
 
-		debug "inputs: #{inputs}"
 
 		# remove mentions
 		inputs.each do |i|
@@ -47,16 +46,15 @@ class Action
 			keywords << i
 		end
 
-		debug "keywords: #{keywords}"
 
 		# check for two keywords
 		if Moves::AttackPoints.keys.include? [keywords[0], keywords[1]].join("_").to_sym
-			debug "is #{[keywords[0], keywords[1]].join("_")} a valid move?"
+			#debug "is #{[keywords[0], keywords[1]].join("_")} a valid move?"
 			@type = [keywords[0], keywords[1]].join("_")
 		
 		# check for one keywords
 		elsif Moves::AttackPoints.keys.include? keywords[0].to_sym
-			debug "is #{keywords[0]} a valid move?"
+			#debug "is #{keywords[0]} a valid move?"
 			@type = keywords[0]
 		end
 

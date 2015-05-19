@@ -28,16 +28,16 @@ def calculate_damage(base_attack, level=:basic)
 
 	case roll
 		when miss
-			result = "miss"
+			result = "Miss"
 			mult = 0
 		when graze
-			result = "graze"
+			result = "Graze"
 			mult = 0.75
 		when hit
-			result = "hit"
+			result = "Hit"
 			mult = 1	# hit
 		when crit
-			result = "critical"
+			result = "Critical hit"
 			mult = 1.25 # critical hit!
 	end
 
@@ -128,33 +128,6 @@ module Moves
 		end
 	end
 
-
-	def kick(fight, from, to)
-		base_attack = AttackPoints[:kick]
-		result, damage = calculate_damage base_attack, :basic
-		apply_damage(to, damage)
-		to_hp = to.fights_hp[fight.title]
-		to.save
-		return one_of "@#{from.user_name}'s kick strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
-	end
-
-	def palm_strike(fight, from, to)
-		base_attack = AttackPoints[:palm_strike]
-		result, damage = calculate_damage base_attack
-
-		apply_damage(to, damage)
-		to_hp = to.fights_hp[fight.title]
-		to.save
-		return one_of "@#{from.user_name}'s palm strike lands on @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"				
-	end
-
-	def hammerfist(fight, from, to)
-		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{move[:from]}'s hammerfist strikes @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
-		#return one_of "@#{from.user_name}'s hammerfist strikes @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"
-
-	end
-
 	def block(fight, from, to)
 
 		pending_move_type = fight.pending_move[:type]
@@ -173,6 +146,89 @@ module Moves
 		end
 
 	end
+
+
+
+	# OFFENSIVE MOVES ---- BASIC
+	def kick(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{from.user_name} kicks @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+	end
+
+	def roundhouse(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{from.user_name} launches at @#{to.user_name} with a roundhouse kick! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+	end
+
+	def punch(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{from.user_name} punches @#{to.user_name}. #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+	end
+
+	def jab(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{from.user_name} jabs @#{to.user_name}. #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+	end
+
+	def haymaker(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{from.user_name} desperately swipes at @#{to.user_name} with a haymaker punch. #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"		
+	end
+
+	def hammerfist(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{move[:from]}'s hammerfist strikes @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+
+	end
+
+	def palm_strike(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{from.user_name}'s palm strike wallops @#{to.user_name}! #{result}, -#{damage}HP (#{to_hp}/#{TotalHitPoints})"				
+	end
+
+	def uppercut(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
+		return one_of "@#{move[:from]}'s uppercut strikes @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	# OFFENSIVE MOVES ---- ADVANCED
+	def eagle_claw(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]} lunges at @#{move[:to]} with eagle claw! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	def skeleton_claw(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]} masters the skeleton claw, strikes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	def butterfly_kick(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]} flies towards @#{move[:to]} in butterfly kick stance. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	def thumb_strike(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]} attacks @#{move[:to]} with thumb strike. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	def flying_kick(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]} attacks @#{move[:to]} with flying kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	def scorpion_kick(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]} attacks @#{move[:to]} with scorpion kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+	def tornado_kick(fight, from, to)
+		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
+		return one_of "@#{move[:from]}'s blurry form devastates @#{move[:to]} with tornado kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+	end
+
+
+	
 
 	# only called directly by Action when a fight has resolved
 	def win(fight, from, to, winner)
