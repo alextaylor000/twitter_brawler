@@ -28,8 +28,23 @@ def test_threading
 	test_execute "u1", "challenge", "u2"
 end
 
+def test_tweet_length
+	include Moves
+
+	Moves::AttackPoints.keys.each do |k|
+		2000.times do
+			self.__send__(k.to_sym, "fight", "from", "to")
+		end
+		
+	end
+	
+	
+end
+
+
 reset_db
 
-### RUN TESTS
-test_threading
 
+### RUN TESTS
+#test_threading
+test_tweet_length

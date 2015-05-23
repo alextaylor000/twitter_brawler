@@ -1,6 +1,8 @@
 # moves.rb
 # The heart of twitfu! Moves are run when their method is called by an action. They determine the result of the action and update the models.
 
+DebugMode = true # set this to true to short-circuit calculate_result
+
 ### MODELS AND MOVES
 TotalHitPoints = 25
 
@@ -84,7 +86,7 @@ module Moves
 		:hammerfist => 5,
 		:palm_strike => 5,
 		:uppercut => 5,
-		
+
 		# advanced
 		:eagle_claw => 10,
 		:skeleton_claw => 10,
@@ -102,7 +104,7 @@ module Moves
 			fight.save
 			return one_of "@#{to.user_name}: @#{from.user_name} has questioned your honour and challenges you to a duel. Reply 'accept' to begin.", \
 							"@#{to.user_name}: @#{from.user_name} has declared battle! Reply 'accept' to begin.", \
-							"@#{to.user_name}: @#{from.user_name} curses your family's name. Reply 'accept' to defend your honour."
+							"@#{to.user_name}: @#{from.user_name} curses your family's name and wishes to duel. Reply 'accept' to defend your honour."
 		end
 
 	end
@@ -160,9 +162,10 @@ module Moves
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:to]} deftly avoids @#{move[:from]}'s roundhouse kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
-							"@#{move[:to]} steps aside as @#{move[:from]}'s roundhouse kick strikes air. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+							"@#{move[:to]} steps aside as @#{move[:from]}'s roundhouse kick strikes thin air. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		else
-			return one_of "@#{move[:from]} launches at @#{move[:to]} with a roundhouse kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
+			return one_of "@#{move[:from]} attacks @#{move[:to]} with a roundhouse kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]} strikes @#{move[:to]} with a roundhouse kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 		end
 		
 	end
@@ -170,23 +173,26 @@ module Moves
 	def punch(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
-			return one_of "@#{move[:from]} throws a punch but fails to connect with @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]}'s punch is no match for @#{move[:to]}'s agility. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]} throws a punch at @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		else
 			return one_of "@#{move[:from]} punches @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
-					"@#{move[:from]}'s punch dazes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+						  "@#{move[:from]}'s punch dazes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 
 		end
 	end
 
 	def jab(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
-		return one_of "@#{move[:from]} jabs @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
+		return one_of "@#{move[:from]} jabs @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+						"En garde - @#{move[:from]} jabs @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 	end
 
 	def haymaker(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
-			return one_of "@#{move[:from]}'s haymaker misses @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]}'s haymaker misses @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]}'s haymaker proves useless against @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 
 		elsif move[:result] == "Critical hit"
 			return one_of "@#{move[:from]}'s haymaker punch reduces @#{move[:to]} to tears. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -214,7 +220,7 @@ module Moves
 	def palm_strike(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		return one_of "@#{move[:from]}'s palm strike wallops @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
-						"@#{move[:from]} attacks @#{move[:to]} with palm strike! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+						"HAYYAAA! @#{move[:from]} attacks @#{move[:to]} with palm strike! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 	end
 
 	def uppercut(fight, from, to)
@@ -234,9 +240,13 @@ module Moves
 	def eagle_claw(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
-			return one_of "@#{move[:from]}'s eagle claw provides @#{move[:to]} with a shameful display of skill. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]}'s eagle claw is useless against @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+		elsif move[:result] == "Critical hit"
+			return one_of "Magnificent. @#{move[:to]} becomes prey for @#{move[:from]}'s eagle claw. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			
 		else
-			return one_of "@#{move[:from]} lunges at @#{move[:to]} with eagle claw! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]} lunges at @#{move[:to]} with eagle claw! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]} attacks @#{move[:to]} with eagle claw! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		end
 		
 	end
@@ -246,7 +256,8 @@ module Moves
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]} merely pokes @#{move[:to]} with skeleton claw. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		elsif move[:result] == "Critical hit"
-			return one_of "@#{move[:from]} masters the skeleton claw, strikes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]} masters the skeleton claw, strikes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]} devastates @#{move[:to]} with skeleton claw. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		else
 			return one_of "@#{move[:from]} attacks with skeleton claw, strikes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		end
@@ -259,7 +270,8 @@ module Moves
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s butterfly kick against @#{move[:to]} lacks grace. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		else
-			return one_of "@#{move[:from]} flies towards @#{move[:to]} in butterfly kick stance. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]} flies towards @#{move[:to]} in butterfly kick stance. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]} attacks @#{move[:to]} with butterfly kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		end
 
 		
@@ -277,14 +289,20 @@ module Moves
 		if move[:result] == "Miss"
 			return one_of "Despicable! @#{move[:from]}'s flying kick misses @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		else
-			return one_of "@#{move[:from]} attacks @#{move[:to]} with flying kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+			return one_of "@#{move[:from]} attacks @#{move[:to]} with flying kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"@#{move[:from]} strikes @#{move[:to]} with a flying kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 		end
 		
 	end
 
 	def scorpion_kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
-		return one_of "@#{move[:from]} stings @#{move[:to]} with scorpion kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+		if move[:result] == "Miss"
+			return one_of "@#{move[:from]}'s scorpion kick scuttles past @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+		else
+			return one_of "@#{move[:from]} stings @#{move[:to]} with scorpion kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
+							"Impressive. @#{move[:from]}'s scorpion kick strikes @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
+		end
 	end
 
 	def tornado_kick(fight, from, to)
@@ -304,12 +322,17 @@ module Moves
 		challenged_hp = to.fights_hp[@fight.title]
 
 		return one_of "@#{winner} emerges victorious! Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}", \
-			"A display of genius! @#{winner} is the victor. Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}"
+			"A display of genius! @#{winner} is the victor. Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}",
+			"So then, you've mastered it. @#{winner} has triumphed. Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}",
+			"You are most skilled. @#{winner} is the victor. Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}",
+			"You training is complete. @#{winner} has triumphed. Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}"
 	end
 
 	private
 			# Calculate result, apply damage, and return values needed to compose tweet.
 			def calculate_result(fight, from, to, move, level)
+				return calculate_result_debug_mode if DebugMode
+
 				base_attack = AttackPoints[move]
 				result, damage = calculate_damage base_attack, level
 				apply_damage(to, damage)
@@ -321,6 +344,16 @@ module Moves
 							:result => result, \
 							:damage => damage, \
 							:to_hp => to_hp }
+			end
+
+			# calculate a fake result; used for testing the lengths of all the tweets
+			def calculate_result_debug_mode
+				return { 	:from => "user1__________", \
+							:to => "user2__________", \
+							:result => one_of("Miss", "Graze", "Hit", "Critical hit"), \
+							:damage => "16", \
+							:to_hp => "21" }
+
 			end
 
 			# applies damage or makes HP 0
@@ -355,10 +388,10 @@ module Moves
 			def one_of(*text)
 				string = text[rand(text.count)]
 
-				if string.length > 140
+				if string.length > 105
 					debug "WARNING: Tweet is #{string.length} characters: '#{string}'"
 				else
-					debug "tweet length: #{string.length}/140"
+					#debug "tweet length: #{string.length}/140: #{string}"
 				end
 
 				return string

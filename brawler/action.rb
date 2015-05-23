@@ -60,6 +60,7 @@ class Action
 			@type = keywords[0]
 		else
 			debug "#{keywords} does not contain a valid move"
+			return false
 		end
 
 		debug "type: #{@type}"
@@ -161,6 +162,7 @@ class Action
 		if result.any?
 			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
 		end
+
 		
 		
 
