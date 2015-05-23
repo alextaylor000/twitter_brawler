@@ -27,6 +27,8 @@ class Action
 	# text: the full text of the tweet, for parsing
 	# to: who the user tweeted at - their challenger
 	def initialize(from, text, to, tweet=nil)
+		return false if text.strip.empty?
+
 		inputs 	= text.split " "
 		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
 
@@ -39,7 +41,6 @@ class Action
 
 		keywords = []
 
-
 		# remove mentions
 		inputs.each do |i|
 			next if i.include? "@"
@@ -47,16 +48,21 @@ class Action
 		end
 
 
+
 		# check for two keywords
 		if Moves::AttackPoints.keys.include? [keywords[0], keywords[1]].join("_").to_sym
-			#debug "is #{[keywords[0], keywords[1]].join("_")} a valid move?"
+			debug "is #{[keywords[0], keywords[1]].join("_")} a valid move?"
 			@type = [keywords[0], keywords[1]].join("_")
 		
 		# check for one keywords
 		elsif Moves::AttackPoints.keys.include? keywords[0].to_sym
-			#debug "is #{keywords[0]} a valid move?"
+			debug "is #{keywords[0]} a valid move?"
 			@type = keywords[0]
+		else
+			debug "#{keywords} does not contain a valid move"
 		end
+
+		debug "type: #{@type}"
 
 		@to   	= get_fighter to	# assign a fighter object or create one
 

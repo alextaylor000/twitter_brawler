@@ -65,9 +65,14 @@ class Listener
 
 		  			# for test purposes, swap out the username for something 15 chars long
 		  			from = debug_replace_username input_split[0]
+		  			text = input_split[1...-1].join(" ")
 		  			to = debug_replace_username input_split.last
+		  			
+		  			debug "from: #{from}"
+		  			debug "to: #{to}"
+		  			debug "text: #{text}"
 
-			  		action = Action.new from, input_split[1...-1].join(" "), to  # from, text, to
+			  		action = Action.new from, text, to  # from, text, to
 
 			  		if action.fight
 				  		result = action.execute
