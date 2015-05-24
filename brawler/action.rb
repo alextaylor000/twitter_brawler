@@ -1,7 +1,8 @@
 # action.rb
 # An Action is created by a tweet; it controls the interaction between the user and the models
 
-require 'timeout' # required to process pending moves
+require 'timeout' 		# to process pending moves
+require 'securerandom' 	# to genereate a random string to append to title after winning
 require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
@@ -172,6 +173,7 @@ class Action
 			if winner
 				result << self.__send__(:win, @fight, @from, @to, winner.user_name)
 				@fight.status = "won"
+				@fight.title = @title + SecureRandom.hex
 				@fight.save
 			end
 		end
@@ -181,6 +183,7 @@ class Action
 		store_tweets result
 
 	end
+
 
 	# Return the winner of the fight, or false if win condition not yet met
 	def check_for_winner

@@ -1,7 +1,7 @@
 # moves.rb
 # The heart of twitfu! Moves are run when their method is called by an action. They determine the result of the action and update the models.
 
-DebugMode = true # set this to true to short-circuit calculate_result
+DebugMode = false # set this to true to short-circuit calculate_result
 
 ### MODELS AND MOVES
 TotalHitPoints = 25

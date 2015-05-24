@@ -30,7 +30,7 @@ end
 
 def test_tweet_length
 	include Moves
-
+	## MAKE SURE TO SET DebugMode TO TRUE
 	Moves::AttackPoints.keys.each do |k|
 		2000.times do
 			self.__send__(k.to_sym, "fight", "from", "to")
