@@ -8,4 +8,3 @@ secret 'LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp'
 token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'
 
 
-reply "@twtfu_test0002 hello world..", 

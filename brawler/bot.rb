@@ -10,6 +10,15 @@ require 'chatterbot/dsl'
 require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# config.rb
 require File.expand_path(File.dirname(__FILE__) + '/action') 	# action.rb
+require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
+
+class Twitter::Tweet
+	# Queries our TweetID model to determine if the tweet ID is already in there.
+	def is_unique?
+		this_id = TweetID.all(:tweet_id => self.id)
+		this_id.empty?
+	end
+end
 
 class TwitterBot
 
@@ -48,6 +57,11 @@ class TwitterBot
 				# update chatterbot config. this is apparently required
 				update_config
 
+				# send tweets every loop
+				# TODO: this will be rate-limited by the replies block above. is this a problem?
+				debug "running send_tweets"
+				send_tweets
+
 				sleep 60
 
 			rescue Twitter::Error::TooManyRequests => error
@@ -55,11 +69,6 @@ class TwitterBot
 				debug "~~ RATE LIMITED, sleeping for #{sleep_seconds} ~~"
 				sleep sleep_seconds
 			end # begin/rescue
-
-		# send tweets every loop
-		# TODO: this will be rate-limited by the replies block above. is this a problem?
-		debug "running send_tweets"
-		send_tweets
 
 		end # loop
 	
@@ -78,7 +87,10 @@ class TwitterBot
 	  		action = Action.new from, text, to, tweet
 
 	  		if action.fight
+	  			debug "executing action"
 		  		action.execute
+		  	else
+		  		debug "fight not found"
 		  	end
 	  	}
 
@@ -95,22 +107,44 @@ class TwitterBot
 			
 			tweet_source 	= {:id => tweet.source}
 			
-			debug "sending tweet: #{text}"
+			debug "preparing to sending tweet: #{text}"
+			new_tweet = reply(text, tweet_source)
 			
-			reply text, tweet_source
+			unless new_tweet.is_unique?
+				random_suffix = random_chars(2)
+				new_tweet = reply(text + random_suffix, tweet_source)
+				debug "duplicate tweet id detected; sent this instead: #{text + random_suffix}"
+			end
+			
+			store_id_of new_tweet
+
 			tweet.destroy
+			debug "tweet sent"
 
 		end # tweets.each
 
 	end # send_tweets
+
+	# Returns random characters to append to message
+	def random_chars(num)
+		chars = ["\u270a","\u231b","\u23f3","\u26a1","\u2b50"]
+		return chars[rand(chars.count)]
+	end
+
+	# Stores the ID of the tweet in TweetID model
+	def store_id_of(tweet)
+		t_id = TweetID.create(:tweet_id => tweet.id)
+		t_id.save
+	end
+
 end # class TwitterBot
 
 # runtime
 
 # reset db for testing
-Fight.destroy_all
-Fighter.destroy_all	
-TweetQueue.destroy_all
+#Fight.destroy_all
+#Fighter.destroy_all	
+#TweetQueue.destroy_all
 
 
 bot = TwitterBot.new

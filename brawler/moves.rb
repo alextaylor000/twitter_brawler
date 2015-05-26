@@ -76,6 +76,7 @@ module Moves
 		:challenge => nil,
 		:accept => nil,
 		:block => nil,
+		:test_dupe => nil,
 
 		# basic
 		:kick => 5,
@@ -129,6 +130,10 @@ module Moves
 							"@#{from.user_name} contemplates @#{to.user_name}'s destruction."
 
 		end
+	end
+
+	def test_dupe(fight, from, to)
+		return "test duplicate tweet"
 	end
 
 	def block(fight, from, to)

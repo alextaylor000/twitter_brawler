@@ -21,8 +21,16 @@ class Comment
 	key :comment, String
 
 	timestamps!
-
 end
+
+class TweetID
+	include MongoMapper::Document
+	# an index of IDs of recently sent tweets, to detect duplicate tweets
+	key :tweet_id, Integer
+
+	timestamps!
+end
+
 
 # wipe db at runtime for testing
 Story.destroy_all

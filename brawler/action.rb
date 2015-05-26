@@ -71,7 +71,9 @@ class Action
 
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
+			
 		
+
 		#debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
 
@@ -314,8 +316,8 @@ class Action
 
 	# Stores a tweet in the TweetQueue model so that the bot can access it
 	def store_tweets (tweets)
-
 		tweets.each do |t|
+			debug "storing tweet #{t}"
 			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
 			new_tweet.save
 
