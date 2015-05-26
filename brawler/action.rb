@@ -30,6 +30,8 @@ class Action
 	def initialize(from, text, to, tweet=nil)
 		return false if text.strip.empty?
 
+		@id = SecureRandom.hex # unique id for this action
+
 		inputs 	= text.split " "
 		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
 
@@ -52,19 +54,17 @@ class Action
 
 		# check for two keywords
 		if Moves::AttackPoints.keys.include? [keywords[0], keywords[1]].join("_").to_sym
-			debug "is #{[keywords[0], keywords[1]].join("_")} a valid move?"
 			@type = [keywords[0], keywords[1]].join("_")
 		
 		# check for one keywords
 		elsif Moves::AttackPoints.keys.include? keywords[0].to_sym
-			debug "is #{keywords[0]} a valid move?"
 			@type = keywords[0]
 		else
-			debug "#{keywords} does not contain a valid move"
+			debug "Action #{@id}: '#{keywords}' does not contain a valid move."
 			return false
 		end
 
-		debug "type: #{@type}"
+		debug "Action #{@id}: Found move type '#{@type}'"
 
 		@to   	= get_fighter to	# assign a fighter object or create one
 
@@ -73,8 +73,8 @@ class Action
 		@fight 	= get_fight					# assign a fight object or create one
 			
 		
+		debug "Action #{@id}: Init complete [from: #{@from}, to: #{@to}, fight: #{@fight.title}, type: #{@type}]"
 
-		#debug "init action {from: #{@from.user_name}, type:#{@type}, to: #{@to.user_name}"
 	end
 
 	# Execute the current action. Return the result, and check for win conditions.
@@ -94,7 +94,7 @@ class Action
 		#debug "save log for #{@from}, #{@type}, #{@to}"
 		save_log # add it to the fight log
 		# TODO: we'll probably eventually want to filter this log a little more and record just the real moves
-
+		#byebug
 		if @fight.initiative == @from.user_name
 			
 			if @fight.pending_move.empty?
@@ -156,16 +156,14 @@ class Action
 			# If the requesting user doesn't have initiative
 			#result << "It's not your turn!"
 			
-			#debug "Not your turn"
+			debug "Action #{@id}: Action ignored, move by #{from.username} but #{to.username} has initiative"
 		end
 
-		debug "result: #{result}"
 
 		# append initiative to last tweet
 		if result.any?
 			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
 		end
-
 		
 		
 
@@ -180,8 +178,8 @@ class Action
 			end
 		end
 
-		#return result
-		#debug "storing tweet(s) #{result}"
+
+		debug "Action #{@id}: Storing tweets: #{result}"
 		store_tweets result
 
 	end
@@ -204,6 +202,10 @@ class Action
 		@fight
 	end
 
+	def id
+		@id
+	end
+
 	def fight_is_active
 
 		if @fight.status == "active"
@@ -216,7 +218,7 @@ class Action
 
 	# Runs when an invalid move is passed in
 	def invalid_move
-		debug "invalid move"
+		debug "Action #{@id}: Invalid move"
 	end
 
 	# Update the fight log; this stores each move in the fight
@@ -231,7 +233,7 @@ class Action
 		execute_move = false
 
 		begin
-			debug "processing #{@type}, waiting for block (#{ActionGracePeriodSeconds}s)..."
+			debug "Action #{@id}: Processing #{@type}, listening for block (#{ActionGracePeriodSeconds}s)..."
 
 			status = Timeout::timeout(ActionGracePeriodSeconds) {
 			  while true do 
@@ -243,14 +245,17 @@ class Action
 			  end
 			}
 
+			debug "Action #{@id}: Finished waiting for block."
+
 		rescue Timeout::Error
 			# intentional stub; we're really looking to pass through to ensure
+			debug "Action #{@id}: Timeout. Should execute move: #{execute_move}"
+			#byebug
 
 		ensure
 			unless execute_move
 				reset_pending_move
 				return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move
-
 			end			
 
 		end
@@ -311,13 +316,13 @@ class Action
 			#debug "using existing fight #{@title} <#{fight.id}>"
 		end
 
+
 		return fight
 	end
 
 	# Stores a tweet in the TweetQueue model so that the bot can access it
 	def store_tweets (tweets)
 		tweets.each do |t|
-			debug "storing tweet #{t}"
 			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
 			new_tweet.save
 

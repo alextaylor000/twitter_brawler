@@ -105,7 +105,7 @@ module Moves
 			fight.save
 			return one_of "@#{to.user_name}: @#{from.user_name} has questioned your honour and challenges you to a duel. Reply 'accept' to begin.", \
 							"@#{to.user_name}: @#{from.user_name} has declared battle! Reply 'accept' to begin.", \
-							"@#{to.user_name}: @#{from.user_name} curses your family's name and wishes to duel. Reply 'accept' to defend your honour."
+							"@#{to.user_name}: @#{from.user_name} curses your family's name and wishes to duel. Reply 'accept' to begin."
 		end
 
 	end

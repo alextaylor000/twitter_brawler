@@ -32,12 +32,14 @@ class TwitterBot
 		# ignore tweets before and including this ID
 		#since_id 596544746069368832
 
-		debug "init listen"
+		debug "TwitterBot is listening ..."
 
 		loop do
 			begin
 				# https://dev.twitter.com/rest/reference/get/statuses/mentions_timeline
 				# Rate: 15 requests / 15 minutes
+				debug "Polling for tweets ..."
+
 				num_replies = 0
 
 				replies do |tweet|
@@ -47,19 +49,18 @@ class TwitterBot
 					# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
 						# tweet.user_mentions.first.screen_name = "twtfu", for example
 
-					debug "#{tweet.text}"
+					debug "Incoming Tweet: #{tweet.text}"
 					num_replies += 1
 					process tweet
 					
 				end
-				debug "processed #{num_replies} replies"
 
 				# update chatterbot config. this is apparently required
 				update_config
 
 				# send tweets every loop
 				# TODO: this will be rate-limited by the replies block above. is this a problem?
-				debug "running send_tweets"
+				
 				send_tweets
 
 				sleep 60
@@ -83,14 +84,14 @@ class TwitterBot
 
   		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
   		Thread.new {
-  			debug "init action #{from}, #{text}, #{to}"
+  			debug "New Action: [from: #{from}, text: #{text}, to: #{to}]"
 	  		action = Action.new from, text, to, tweet
 
 	  		if action.fight
-	  			debug "executing action"
+	  			debug "Executing action #{action.id}..."
 		  		action.execute
 		  	else
-		  		debug "fight not found"
+		  		debug "ERROR: Fight not found. Action #{action.id} will not execute"
 		  	end
 	  	}
 
@@ -107,19 +108,18 @@ class TwitterBot
 			
 			tweet_source 	= {:id => tweet.source}
 			
-			debug "preparing to sending tweet: #{text}"
 			new_tweet = reply(text, tweet_source)
 			
 			unless new_tweet.is_unique?
 				random_suffix = random_chars(2)
 				new_tweet = reply(text + random_suffix, tweet_source)
-				debug "duplicate tweet id detected; sent this instead: #{text + random_suffix}"
+				debug "Duplicate tweet id detected; adding random emoji"
 			end
 			
 			store_id_of new_tweet
 
 			tweet.destroy
-			debug "tweet sent"
+			debug "Outgoing Tweet: #{new_tweet.text}"
 
 		end # tweets.each
 
@@ -148,7 +148,6 @@ end # class TwitterBot
 
 
 bot = TwitterBot.new
-debug "loading bot.listen..."
 bot.listen
 
 
