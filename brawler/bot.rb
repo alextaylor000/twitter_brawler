@@ -78,7 +78,16 @@ class TwitterBot
 
 	# Forks a new thread to execute the action
 	def process (tweet)
-		to = tweet.user_mentions.last.screen_name # for now, assume the last mention is the correct person
+
+		tweet.user_mentions.each do |mention|
+			sn = mention.screen_name
+
+			unless sn == "twtfu"
+				to = sn
+				break
+			end
+		end
+
 		from = tweet.user.screen_name
 		text = tweet.text
 

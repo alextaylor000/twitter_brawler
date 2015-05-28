@@ -94,7 +94,7 @@ class Action
 		#debug "save log for #{@from}, #{@type}, #{@to}"
 		save_log # add it to the fight log
 		# TODO: we'll probably eventually want to filter this log a little more and record just the real moves
-		#byebug
+		
 		if @fight.initiative == @from.user_name
 			
 			if @fight.pending_move.empty?
@@ -231,7 +231,7 @@ class Action
 	# Waits for a move by the other player, otherwise executes the move
 	def process_move
 		execute_move = false
-
+		
 		begin
 			debug "Action #{@id}: Processing #{@type}, listening for block (#{ActionGracePeriodSeconds}s)..."
 
@@ -291,6 +291,7 @@ class Action
 
 	# Returns a fight object or creates one if it doesn't exist.
 	def get_fight
+		
 		fight = Fight.where(:title => @title, :status => {:$nin => ["won"]}).first
 		
 		if fight.nil? \
@@ -306,6 +307,7 @@ class Action
 
 				#debug "new fight created: #{@title} <#{fight.id}>"
 			else
+
 				fight = false
 				#debug "invalid command, need to issue 'challenge' first"
 			end
