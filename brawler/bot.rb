@@ -40,17 +40,20 @@ class TwitterBot
 				# Rate: 15 requests / 15 minutes
 				debug "Polling for tweets ..."
 
-				num_replies = 0
-
+				# Store tweets in an array so we can sort them according to timestamp
+				replies_array = []
 				replies do |tweet|
+					replies_array << tweet
+				end
+
+				replies_array.reverse!.each do |tweet|
 					# tweet.in_reply_to_screen_name = "twtfu"
 					# tweet.text = full text of the tweet, i.e. "@twtfu test tweet"
 					# tweet.user.screen_name = the sender of the tweet, i.e. "twtfu_test0001"
 					# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
 						# tweet.user_mentions.first.screen_name = "twtfu", for example
 
-					debug "Incoming Tweet: #{tweet.text}"
-					num_replies += 1
+					debug "Incoming Tweet: '#{tweet.text}' <id #{tweet.id}, time: #{tweet.created_at}>"
 					process tweet
 					
 				end
@@ -58,9 +61,11 @@ class TwitterBot
 				# update chatterbot config. this is apparently required
 				update_config
 
+				# Find any fights with pending moves and execute them if the block grace period has expired
+				process_pending_moves
+
 				# send tweets every loop
 				# TODO: this will be rate-limited by the replies block above. is this a problem?
-				
 				send_tweets
 
 				sleep 60
@@ -78,6 +83,7 @@ class TwitterBot
 
 	# Forks a new thread to execute the action
 	def process (tweet)
+		to = nil
 
 		tweet.user_mentions.each do |mention|
 			sn = mention.screen_name
@@ -90,20 +96,26 @@ class TwitterBot
 
 		from = tweet.user.screen_name
 		text = tweet.text
+		time = tweet.created_at
 
-  		# spawn a new thread so that the action can wait a set amount of time for a block move without...well, blocking.
-  		Thread.new {
-  			debug "New Action: [from: #{from}, text: #{text}, to: #{to}]"
-	  		action = Action.new from, text, to, tweet
 
-	  		if action.fight
-	  			debug "Executing action #{action.id}..."
-		  		action.execute
-		  	else
-		  		debug "ERROR: Fight not found. Action #{action.id} will not execute"
-		  	end
-	  	}
+		debug "New Action: [from: #{from}, text: #{text}, to: #{to}]"
+  		action = Action.new from, text, to, time, tweet
 
+  		if action.fight
+  			debug "Executing action #{action.id}..."
+	  		action.execute
+	  	else
+	  		debug "ERROR: Fight not found. Action #{action.id} will not execute"
+	  	end
+
+
+	end
+
+	def process_pending_moves
+
+		fights = Fight.where(:pending_move => {:$exists => 1})
+		byebug
 	end
 
 	# Send a tweet on behalf of the bot.

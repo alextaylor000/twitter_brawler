@@ -72,7 +72,7 @@ class Listener
 		  			debug "to: #{to}"
 		  			debug "text: #{text}"
 
-			  		action = Action.new from, text, to  # from, text, to
+			  		action = Action.new from, text, to, Time.now  # from, text, to
 
 			  		if action.fight
 				  		result = action.execute
@@ -96,9 +96,9 @@ end # class Listener
 
 
 # for testing
-Fight.destroy_all
-Fighter.destroy_all
-TweetQueue.destroy_all
+#Fight.destroy_all
+#Fighter.destroy_all
+#TweetQueue.destroy_all
 
 
 # CONSOLE MODE

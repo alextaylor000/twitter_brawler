@@ -7,7 +7,7 @@ require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
-ActionGracePeriodSeconds = 2	# wait this many seconds for a block before executing a move
+ActionGracePeriodSeconds = 5	# wait this many seconds for a block before executing a move
 
 # TestTweet provides a fake id to pass into the store_tweet method for debugging purposes
 class TestTweet
@@ -27,7 +27,7 @@ class Action
 	# from: the user who sent the tweet
 	# text: the full text of the tweet, for parsing
 	# to: who the user tweeted at - their challenger
-	def initialize(from, text, to, tweet=nil)
+	def initialize(from, text, to, time, tweet=nil)
 		return false if text.strip.empty?
 
 		@id = SecureRandom.hex # unique id for this action
@@ -39,8 +39,10 @@ class Action
 			@tweet = TestTweet.new(1) # for console testing
 		end
 
+		@created_at = time
 		@from 	= get_fighter from		# assign a fighter object or create one
 		@type 	= nil # stub for grabbing the type in the block below
+
 
 		keywords = []
 
@@ -100,6 +102,7 @@ class Action
 			if @fight.pending_move.empty?
 
 				if @type == "block"
+					debug "Action #{@id}: Pending move is empty, can't execute block."
 					invalid_move
 
 				elsif @type == "challenge" or @type == "accept"
@@ -116,8 +119,10 @@ class Action
 						@fight.initiative = @to.user_name # initiative goes to other player after a successful move
 						@fight.save
 
-						# process the move; wait to see if a block is received
-						result << process_move
+						debug "Action #{@id}: Move stored in pending_move"
+						# # process the move; wait to see if a block is received
+						# tweet = process_move
+						# result << tweet unless tweet == nil
 
 					else
 						invalid_move
@@ -126,17 +131,17 @@ class Action
 
 			else # a pending action is present
 				if @type == "block"
-					result << self.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
+					debug "Action #{@id}: Executing block move"
 
-					reset_pending_move
+					if @created_at - @fight.pending_move[:created_at] <= ActionGracePeriodSeconds
+						result << self.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
+						reset_pending_move
+					end					
+					
 				else
 					# only process a move if it's valid
 					if Moves.instance_methods.include? @type.to_sym and fight_is_active
-						pending_move_type 	= @fight.pending_move[:type]
-						pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
-						pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
-
-						result << self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
+						result << execute_pending_move
 						reset_pending_move
 
 						# store the current move as the new pending move
@@ -153,9 +158,7 @@ class Action
 			end
 
 		else
-			# If the requesting user doesn't have initiative
-			#result << "It's not your turn!"
-			
+			# If the requesting user doesn't have initiative			
 			debug "Action #{@id}: Action ignored, move by #{from.username} but #{to.username} has initiative"
 		end
 
@@ -178,9 +181,10 @@ class Action
 			end
 		end
 
-
-		debug "Action #{@id}: Storing tweets: #{result}"
-		store_tweets result
+		if result.any?
+			debug "Action #{@id}: Storing tweets: #{result}"
+			store_tweets result
+		end
 
 	end
 
@@ -230,7 +234,7 @@ class Action
 
 	# Waits for a move by the other player, otherwise executes the move
 	def process_move
-		execute_move = false
+		block_successful = false
 		
 		begin
 			debug "Action #{@id}: Processing #{@type}, listening for block (#{ActionGracePeriodSeconds}s)..."
@@ -240,7 +244,7 @@ class Action
 			  	@fight.reload # reload the instance variable from the database to ensure we catch any changes to fight_actions
 			  	
 			  	# check for a move by the other user
-			  	execute_move = true if @fight.fight_actions.last.from != @from.user_name
+			  	block_successful = true if @fight.fight_actions.last.from == @to.user_name
 			  	sleep 1
 			  end
 			}
@@ -249,11 +253,10 @@ class Action
 
 		rescue Timeout::Error
 			# intentional stub; we're really looking to pass through to ensure
-			debug "Action #{@id}: Timeout. Should execute move: #{execute_move}"
-			#byebug
+			debug "Action #{@id}: Timeout. Block successful: #{block_successful}"
 
 		ensure
-			unless execute_move
+			unless block_successful
 				reset_pending_move
 				return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move
 			end			
@@ -262,12 +265,21 @@ class Action
 	end
 
 	def set_pending_move
-		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name}
+		debug "Action #{@id} saving pending move #{@type}"
+		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name, :created_at => @time}
 		@fight.save		
 	end
 
+	def execute_pending_move
+		pending_move_type 	= @fight.pending_move[:type]
+		pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
+		pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
+
+		return self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
+	end
+
 	def reset_pending_move
-		@fight.pending_move = {}
+		@fight.pending_move = nil
 		@fight.save
 	end
 
