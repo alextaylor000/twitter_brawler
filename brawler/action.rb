@@ -21,49 +21,46 @@ class TestTweet
 end
 
 class Action
-	include Moves
+	#include Moves
 
 	# Initialize an action; get all relevant objects and retrieve the action type from the string
 	# from: the user who sent the tweet
 	# text: the full text of the tweet, for parsing
 	# to: who the user tweeted at - their challenger
-	def initialize(from, text, to, time, tweet=nil)
+	def initialize(from, text, to, time, tweet_id=nil, type=nil)
 		return false if text.strip.empty?
 
 		@id = SecureRandom.hex # unique id for this action
 
-		inputs 	= text.split " "
-		@tweet 	= tweet # store the original tweet object to pass into the TweetQueue model
+		@tweet_id 	= tweet_id # store the original tweet object to pass into the TweetQueue model
 
-		if tweet == nil
-			@tweet = TestTweet.new(1) # for console testing
-		end
 
 		@created_at = time
 		@from 	= get_fighter from		# assign a fighter object or create one
-		@type 	= nil # stub for grabbing the type in the block below
+		@type 	= type.to_s 			# use type from init argument or nil (and created it below)
 
-
-		keywords = []
-
-		# remove mentions
-		inputs.each do |i|
-			next if i.include? "@"
-			keywords << i
-		end
-
-
-
-		# check for two keywords
-		if Moves::AttackPoints.keys.include? [keywords[0], keywords[1]].join("_").to_sym
-			@type = [keywords[0], keywords[1]].join("_")
 		
-		# check for one keywords
-		elsif Moves::AttackPoints.keys.include? keywords[0].to_sym
-			@type = keywords[0]
-		else
-			debug "Action #{@id}: '#{keywords}' does not contain a valid move."
-			return false
+		if !@type
+			keywords = []
+
+			# remove mentions
+			inputs 	= text.split " "
+			inputs.each do |i|
+				next if i.include? "@"
+				keywords << i
+			end
+
+			# check for two keywords
+			if Moves::AttackPoints.keys.include? [keywords[0], keywords[1]].join("_").to_sym
+				@type = [keywords[0], keywords[1]].join("_")
+			
+			# check for one keywords
+			elsif Moves::AttackPoints.keys.include? keywords[0].to_sym
+				@type = keywords[0]
+			else
+				debug "Action #{@id}: '#{keywords}' does not contain a valid move."
+				return false
+			end
 		end
 
 		debug "Action #{@id}: Found move type '#{@type}'"
@@ -106,11 +103,11 @@ class Action
 					invalid_move
 
 				elsif @type == "challenge" or @type == "accept"
-					result << self.__send__(@type.to_sym, @fight, @from, @to)
+					result << Moves.__send__(@type.to_sym, @fight, @from, @to)
 
 				else
 					# only process a move if it's valid
-					if Moves.instance_methods.include? @type.to_sym and fight_is_active
+					if Moves.methods.include? @type.to_sym and fight_is_active
 
 						# add the current move to fight.pending_move
 						set_pending_move
@@ -134,19 +131,19 @@ class Action
 					debug "Action #{@id}: Executing block move"
 
 					if @created_at - @fight.pending_move[:created_at] <= ActionGracePeriodSeconds
-						result << self.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
+						result << Moves.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
 						reset_pending_move
 					end					
 					
 				else
 					# only process a move if it's valid
-					if Moves.instance_methods.include? @type.to_sym and fight_is_active
-						result << execute_pending_move
+					if Moves.methods.include? @type.to_sym and fight_is_active
+						result << execute_pending_move(@fight)
 						reset_pending_move
 
 						# store the current move as the new pending move
 						#result << set_pending_move
-						result << self.__send__(@type.to_sym, @fight, @from, @to)
+						result << Moves.__send__(@type.to_sym, @fight, @from, @to)
 					end			
 				end				
 			end
@@ -159,32 +156,12 @@ class Action
 
 		else
 			# If the requesting user doesn't have initiative			
-			debug "Action #{@id}: Action ignored, move by #{from.username} but #{to.username} has initiative"
+			debug "Action #{@id}: Action ignored, move by #{@from.user_name} but #{@to.user_name} has initiative"
 		end
 
 
-		# append initiative to last tweet
-		if result.any?
-			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
-		end
-		
-		
+		process_results(result)
 
-		# check players' hp for death condition
-		if @fight.status == "active"
-			winner = check_for_winner
-			if winner
-				result << self.__send__(:win, @fight, @from, @to, winner.user_name)
-				@fight.status = "won"
-				@fight.title = @title + SecureRandom.hex
-				@fight.save
-			end
-		end
-
-		if result.any?
-			debug "Action #{@id}: Storing tweets: #{result}"
-			store_tweets result
-		end
 
 	end
 
@@ -211,7 +188,6 @@ class Action
 	end
 
 	def fight_is_active
-
 		if @fight.status == "active"
 			return true
 		else
@@ -258,24 +234,52 @@ class Action
 		ensure
 			unless block_successful
 				reset_pending_move
-				return self.__send__(@type.to_sym, @fight, @from, @to) # execute a move
+				return Moves.__send__(@type.to_sym, @fight, @from, @to) # execute a move
 			end			
 
 		end
 	end
 
+	def process_results(result)
+		# append initiative to last tweet
+		if result.any?
+			result.last.replace (result.last + " @#{@fight.initiative}'s move") unless result.empty?
+		end
+
+		# check players' hp for death condition
+		if @fight.status == "active"
+			winner = check_for_winner
+			if winner
+				result << Moves.__send__(:win, @fight, @from, @to, winner.user_name)
+				@fight.status = "won"
+				@fight.title = @title + SecureRandom.hex
+				@fight.save
+			end
+		end
+
+		if result.any?
+			debug "Action #{@id}: Storing tweets: #{result}"
+			store_tweets result
+		end
+	
+	end
+
+
 	def set_pending_move
 		debug "Action #{@id} saving pending move #{@type}"
-		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name, :created_at => @time}
+		@fight.pending_move = {:type => @type, :from => @from.user_name, :to => @to.user_name, :created_at => @created_at, :tweet_id => @tweet_id}
 		@fight.save		
 	end
 
-	def execute_pending_move
-		pending_move_type 	= @fight.pending_move[:type]
-		pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
-		pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
+	def execute_pending_move(fight)
+		pending_move_type 	= fight.pending_move[:type]
+		pending_move_from 	= Fighter.where(:user_name => fight.pending_move[:from] ).first
+		pending_move_to 	= Fighter.where(:user_name => fight.pending_move[:to] ).first
 
-		return self.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
+		result = []
+		result << Moves.__send__(pending_move_type.to_sym, fight, pending_move_from, pending_move_to) # execute the pending move
+
+
 	end
 
 	def reset_pending_move
@@ -337,7 +341,7 @@ class Action
 	# Stores a tweet in the TweetQueue model so that the bot can access it
 	def store_tweets (tweets)
 		tweets.each do |t|
-			new_tweet = TweetQueue.create(:text => t, :source => @tweet.id)
+			new_tweet = TweetQueue.create(:text => t, :source => @tweet_id)
 			new_tweet.save
 
 		end

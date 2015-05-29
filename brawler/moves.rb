@@ -99,7 +99,7 @@ module Moves
 	}
 
 	# challenge a player to a match
-	def challenge(fight, from, to)
+	def Moves.challenge(fight, from, to)
 		if fight.status == "inactive"
 			fight.status = "waiting"
 			fight.save
@@ -111,7 +111,7 @@ module Moves
 	end
 
 	# accept a fighter's challenge
-	def accept(fight, from, to) 
+	def Moves.accept(fight, from, to) 
 		if fight.status == "waiting" \
 			and from.user_name == fight.challenged
 
@@ -132,11 +132,7 @@ module Moves
 		end
 	end
 
-	def test_dupe(fight, from, to)
-		return "test duplicate tweet"
-	end
-
-	def block(fight, from, to)
+	def Moves.block(fight, from, to)
 
 		pending_move_type = fight.pending_move[:type]
 		pending_move_base_attack = AttackPoints[pending_move_type.to_sym]
@@ -158,12 +154,12 @@ module Moves
 
 
 	# OFFENSIVE MOVES ---- BASIC
-	def kick(fight, from, to)
+	def Moves.kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		return one_of "@#{move[:from]} kicks @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"		
 	end
 
-	def roundhouse(fight, from, to)
+	def Moves.roundhouse(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:to]} deftly avoids @#{move[:from]}'s roundhouse kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
@@ -175,7 +171,7 @@ module Moves
 		
 	end
 
-	def punch(fight, from, to)
+	def Moves.punch(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s punch is no match for @#{move[:to]}'s agility. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
@@ -187,13 +183,13 @@ module Moves
 		end
 	end
 
-	def jab(fight, from, to)
+	def Moves.jab(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		return one_of "@#{move[:from]} jabs @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
 						"En garde - @#{move[:from]} jabs @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 	end
 
-	def haymaker(fight, from, to)
+	def Moves.haymaker(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s haymaker misses @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})",
@@ -211,7 +207,7 @@ module Moves
 		
 	end
 
-	def hammerfist(fight, from, to)
+	def Moves.hammerfist(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]} is not yet skilled in the hammerfist against @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -222,13 +218,13 @@ module Moves
 
 	end
 
-	def palm_strike(fight, from, to)
+	def Moves.palm_strike(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		return one_of "@#{move[:from]}'s palm strike wallops @#{move[:to]}! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
 						"HAYYAAA! @#{move[:from]} attacks @#{move[:to]} with palm strike! #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 	end
 
-	def uppercut(fight, from, to)
+	def Moves.uppercut(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :basic)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s uppercut against @#{move[:to]} lacks style. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
@@ -242,7 +238,7 @@ module Moves
 	end
 
 	# OFFENSIVE MOVES ---- ADVANCED
-	def eagle_claw(fight, from, to)
+	def Moves.eagle_claw(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s eagle claw is useless against @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -256,7 +252,7 @@ module Moves
 		
 	end
 
-	def skeleton_claw(fight, from, to)
+	def Moves.skeleton_claw(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]} merely pokes @#{move[:to]} with skeleton claw. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -270,7 +266,7 @@ module Moves
 		
 	end
 
-	def butterfly_kick(fight, from, to)
+	def Moves.butterfly_kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s butterfly kick against @#{move[:to]} lacks grace. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -282,14 +278,14 @@ module Moves
 		
 	end
 
-	def thumb_strike(fight, from, to)
+	def Moves.thumb_strike(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 
 		return one_of "@#{move[:from]} attacks @#{move[:to]} with thumb strike. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})", \
 					"@#{move[:from]} shows no mercy against @#{move[:to]} with thumb strike. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
 	end
 
-	def flying_kick(fight, from, to)
+	def Moves.flying_kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
 			return one_of "Despicable! @#{move[:from]}'s flying kick misses @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -300,7 +296,7 @@ module Moves
 		
 	end
 
-	def scorpion_kick(fight, from, to)
+	def Moves.scorpion_kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]}'s scorpion kick scuttles past @#{move[:to]}. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -310,7 +306,7 @@ module Moves
 		end
 	end
 
-	def tornado_kick(fight, from, to)
+	def Moves.tornado_kick(fight, from, to)
 		move = calculate_result(fight, from, to, __method__.to_sym, :advanced)
 		if move[:result] == "Miss"
 			return one_of "@#{move[:from]} fails to wound @#{move[:to]} with tornado kick. #{move[:result]}, -#{move[:damage]}HP (#{move[:to_hp]}/#{TotalHitPoints})"
@@ -322,7 +318,7 @@ module Moves
 	
 
 	# only called directly by Action when a fight has resolved
-	def win(fight, from, to, winner)
+	def Moves.win(fight, from, to, winner)
 		challenger_hp = from.fights_hp[@fight.title]
 		challenged_hp = to.fights_hp[@fight.title]
 
@@ -335,12 +331,12 @@ module Moves
 
 	private
 			# Calculate result, apply damage, and return values needed to compose tweet.
-			def calculate_result(fight, from, to, move, level)
+			def Moves.calculate_result(fight, from, to, move, level)
 				return calculate_result_debug_mode if DebugMode
 
 				base_attack = AttackPoints[move]
 				result, damage = calculate_damage base_attack, level
-				apply_damage(to, damage)
+				apply_damage(to, damage, fight)
 				to_hp = to.fights_hp[fight.title]
 				to.save
 
@@ -352,7 +348,7 @@ module Moves
 			end
 
 			# calculate a fake result; used for testing the lengths of all the tweets
-			def calculate_result_debug_mode
+			def Moves.calculate_result_debug_mode
 				return { 	:from => "user1__________", \
 							:to => "user2__________", \
 							:result => one_of("Miss", "Graze", "Hit", "Critical hit"), \
@@ -362,7 +358,7 @@ module Moves
 			end
 
 			# applies damage or makes HP 0
-			def apply_damage(target, amount)
+			def Moves.apply_damage(target, amount, fight)
 				if amount > target.fights_hp[fight.title]
 					target.fights_hp[fight.title] = 0
 				else
@@ -373,7 +369,7 @@ module Moves
 			end
 
 			# default action for missing methods
-			def method_missing(method_name, *args, &block)
+			def Moves.method_missing(method_name, *args, &block)
 				return false # let the controller handle notifying the user
 			end
 
@@ -390,7 +386,7 @@ module Moves
 			# end
 			
 			# Return a random string, for keeping things interesting
-			def one_of(*text)
+			def Moves.one_of(*text)
 				string = text[rand(text.count)]
 
 				if string.length > 105

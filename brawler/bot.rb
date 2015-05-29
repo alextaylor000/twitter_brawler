@@ -42,9 +42,23 @@ class TwitterBot
 
 				# Store tweets in an array so we can sort them according to timestamp
 				replies_array = []
-				replies do |tweet|
-					replies_array << tweet
+
+				begin
+					replies do |tweet|
+						replies_array << tweet
+					end
+				rescue Twitter::Error => error
+					byebug
+					debug "Twitter error: #{error.message}"
 				end
+
+				# Find any fights with pending moves and execute them if the block grace period has expired
+
+				# We're doing this before processing the tweets so that if a user tweets a move or block
+				# outside of the grace period, but still within the same polling cycle, the pending move
+				# will still have a chance to execute before anything else comes in.
+				process_pending_moves
+
 
 				replies_array.reverse!.each do |tweet|
 					# tweet.in_reply_to_screen_name = "twtfu"
@@ -61,12 +75,11 @@ class TwitterBot
 				# update chatterbot config. this is apparently required
 				update_config
 
-				# Find any fights with pending moves and execute them if the block grace period has expired
-				process_pending_moves
 
 				# send tweets every loop
 				# TODO: this will be rate-limited by the replies block above. is this a problem?
-				send_tweets
+				debug "send tweets temporarily disabled"
+				#send_tweets
 
 				sleep 60
 
@@ -100,7 +113,7 @@ class TwitterBot
 
 
 		debug "New Action: [from: #{from}, text: #{text}, to: #{to}]"
-  		action = Action.new from, text, to, time, tweet
+  		action = Action.new from, text, to, time, tweet.id
 
   		if action.fight
   			debug "Executing action #{action.id}..."
@@ -112,10 +125,19 @@ class TwitterBot
 
 	end
 
+	# Process pending moves for fights which have them.
 	def process_pending_moves
-
-		fights = Fight.where(:pending_move => {:$exists => 1})
-		byebug
+		fights_with_pending_moves = Fight.where(:pending_move => {  :$exists => true, :$ne => {}  }) 
+		
+		fights_with_pending_moves.each do |fight|
+			pending_move = fight.pending_move
+			
+			if Time.now - pending_move[:created_at] > ActionGracePeriodSeconds
+				debug "Fight: #{fight.title}: Executing pending move after grace period #{ActionGracePeriodSeconds} expired"
+				Action.new pending_move[:from], "text", pending_move[:to], pending_move[:created_at], pending_move[:tweet_id], pending_move[:type]
+				action.execute
+			end
+		end
 	end
 
 	# Send a tweet on behalf of the bot.
