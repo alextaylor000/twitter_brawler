@@ -27,7 +27,7 @@ def calculate_damage(base_attack, level=:basic)
 	elsif level == :advanced
 		miss 	= 1..8
 		graze 	= 9..14
-		hit 	= 15..9
+		hit 	= 15..19
 		crit 	= 20
 	end
 
@@ -149,7 +149,7 @@ module Moves
 		from.save			
 
 		if result == "block"
-			return one_of "@#{from.user_name} blocks @#{to.user_name}'s #{pending_move_type}; reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
+			return one_of "@#{from.user_name} deftly blocks @#{to.user_name}'s #{pending_move_type}; damage reduced to -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 		elsif result == "fail"
 			return one_of "@#{from.user_name}'s block fails vs @#{to.user_name}'s #{pending_move_type}, hit, -#{damage}HP (#{from_hp}/#{TotalHitPoints})"
 		end
@@ -324,8 +324,8 @@ module Moves
 
 	# only called directly by Action when a fight has resolved
 	def Moves.win(fight, from, to, winner)
-		challenger_hp = from.fights_hp[@fight.title]
-		challenged_hp = to.fights_hp[@fight.title]
+		challenger_hp = from.fights_hp[fight.title]
+		challenged_hp = to.fights_hp[fight.title]
 
 		return one_of "@#{winner} emerges victorious! Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}", \
 			"A display of genius! @#{winner} is the victor. Results: @#{fight.challenger} #{challenger_hp}/#{TotalHitPoints}  •  @#{fight.challenged} #{challenged_hp}/#{TotalHitPoints}",

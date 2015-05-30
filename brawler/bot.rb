@@ -134,9 +134,13 @@ class TwitterBot
 			pending_move = fight.pending_move
 			
 			if Time.now - pending_move[:created_at] > ActionGracePeriodSeconds
-				debug "Fight: #{fight.title}: Executing pending move after grace period #{ActionGracePeriodSeconds} expired"
 				action = Action.new pending_move[:from], "text", pending_move[:to], pending_move[:created_at], pending_move[:tweet_id], pending_move[:type]
-				action.execute_pending_move
+				
+				if action.fight
+					debug "Fight: #{fight.title}: Executing pending move after grace period #{ActionGracePeriodSeconds} expired"
+					action.execute_pending_move
+				end
+				
 			end
 		end
 	end

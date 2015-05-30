@@ -70,6 +70,8 @@ class Action
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
 
+		return false if @fight == false
+
 		
 		debug "Action #{@id}: Init complete [from: #{@from}, to: #{@to}, fight: #{@fight.title}, type: #{@type}]"
 
@@ -169,7 +171,9 @@ class Action
 
 	# Return the winner of the fight, or false if win condition not yet met
 	def check_for_winner
-	
+		@from.reload
+		@to.reload
+
 		if @from.fights_hp[@title] <= 0 
 			return @to
 		elsif @to.fights_hp[@title] <= 0
@@ -249,11 +253,13 @@ class Action
 
 		# check players' hp for death condition
 		if @fight.status == "active"
+			byebug
 			winner = check_for_winner
 			if winner
 				result << Moves.__send__(:win, @fight, @from, @to, winner.user_name)
+				reset_pending_move # just in cases
 				@fight.status = "won"
-				@fight.title = @title + SecureRandom.hex
+				@fight.title = @title + "_" + SecureRandom.hex
 				@fight.save
 			end
 		end
