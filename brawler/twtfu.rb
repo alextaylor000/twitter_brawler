@@ -1,2 +1,2 @@
 require 'daemons'
-Daemons.rub('bot_streaming.rb')
+Daemons.run('bot_streaming.rb')
