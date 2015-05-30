@@ -3,6 +3,8 @@
 
 #require 'chatterbot/dsl'
 
+PollDurationInSeconds = 60
+
 # TODO: make these environment variables
 require 'byebug'
 require 'chatterbot/dsl'
@@ -33,6 +35,7 @@ class TwitterBot
 		#since_id 596544746069368832
 
 		debug "TwitterBot is listening ..."
+		debug "Poll duration: #{PollDurationInSeconds}s"
 
 		loop do
 			begin
@@ -48,7 +51,6 @@ class TwitterBot
 						replies_array << tweet
 					end
 				rescue Twitter::Error => error
-					byebug
 					debug "Twitter error: #{error.message}"
 				end
 
@@ -81,7 +83,7 @@ class TwitterBot
 				debug "send tweets temporarily disabled"
 				#send_tweets
 
-				sleep 60
+				sleep PollDurationInSeconds
 
 			rescue Twitter::Error::TooManyRequests => error
 				sleep_seconds = error.rate_limit.reset_in + 10
@@ -134,8 +136,8 @@ class TwitterBot
 			
 			if Time.now - pending_move[:created_at] > ActionGracePeriodSeconds
 				debug "Fight: #{fight.title}: Executing pending move after grace period #{ActionGracePeriodSeconds} expired"
-				Action.new pending_move[:from], "text", pending_move[:to], pending_move[:created_at], pending_move[:tweet_id], pending_move[:type]
-				action.execute
+				action = Action.new pending_move[:from], "text", pending_move[:to], pending_move[:created_at], pending_move[:tweet_id], pending_move[:type]
+				action.execute_pending_move
 			end
 		end
 	end

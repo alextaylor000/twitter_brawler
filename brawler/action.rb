@@ -29,7 +29,6 @@ class Action
 	# to: who the user tweeted at - their challenger
 	def initialize(from, text, to, time, tweet_id=nil, type=nil)
 		return false if text.strip.empty?
-
 		@id = SecureRandom.hex # unique id for this action
 
 		@tweet_id 	= tweet_id # store the original tweet object to pass into the TweetQueue model
@@ -40,7 +39,7 @@ class Action
 		@type 	= type.to_s 			# use type from init argument or nil (and created it below)
 
 		
-		if !@type
+		if @type.empty?
 			keywords = []
 
 			# remove mentions
@@ -70,7 +69,7 @@ class Action
 
 		@title  = get_title					# get the fight id for looking up fights; created from a hash of both users, sorted 		
 		@fight 	= get_fight					# assign a fight object or create one
-			
+
 		
 		debug "Action #{@id}: Init complete [from: #{@from}, to: #{@to}, fight: #{@fight.title}, type: #{@type}]"
 
@@ -138,7 +137,7 @@ class Action
 				else
 					# only process a move if it's valid
 					if Moves.methods.include? @type.to_sym and fight_is_active
-						result << execute_pending_move(@fight)
+						result << execute_pending_move
 						reset_pending_move
 
 						# store the current move as the new pending move
@@ -271,14 +270,15 @@ class Action
 		@fight.save		
 	end
 
-	def execute_pending_move(fight)
-		pending_move_type 	= fight.pending_move[:type]
-		pending_move_from 	= Fighter.where(:user_name => fight.pending_move[:from] ).first
-		pending_move_to 	= Fighter.where(:user_name => fight.pending_move[:to] ).first
+	def execute_pending_move
+		pending_move_type 	= @fight.pending_move[:type]
+		pending_move_from 	= Fighter.where(:user_name => @fight.pending_move[:from] ).first
+		pending_move_to 	= Fighter.where(:user_name => @fight.pending_move[:to] ).first
 
 		result = []
-		result << Moves.__send__(pending_move_type.to_sym, fight, pending_move_from, pending_move_to) # execute the pending move
+		result << Moves.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
 
+		process_results result
 
 	end
 
