@@ -112,6 +112,12 @@ class TwitterBot
 		text = tweet.text
 		time = tweet.created_at
 
+		# help!
+		if text.include? "help"
+			tweet = TweetQueue.create(:text => "@#{from}: welcome to the dojo. Find the answers you seek at http://twtfu.tumblr.com #{random_chars(1)}", :source => tweet.id)
+			tweet.save
+			return
+		end
 
 		debug "New Action: [from: #{from}, text: #{text}, to: #{to}]"
   		action = Action.new from, text, to, time, tweet.id
@@ -175,7 +181,7 @@ class TwitterBot
 
 	# Returns random characters to append to message
 	def random_chars(num)
-		chars = ["\u270a","\u231b","\u23f3","\u26a1","\u2b50"]
+		chars = ["\u270a","\u231b","\u23f3","\u26a1","\u2b50","\u1f4aa"]
 		return chars[rand(chars.count)]
 	end
 
