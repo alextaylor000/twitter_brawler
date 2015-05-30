@@ -30,7 +30,6 @@ class TwitterBot
 		token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'		
 	end
 
-
 	# Listen for tweets @twtfu
 	def listen
 		# ignore tweets before and including this ID
@@ -60,7 +59,7 @@ class TwitterBot
 						# tweet.user_mentions.first.screen_name = "twtfu", for example					
 					debug "Incoming Tweet: '#{tweet.text}' <id #{tweet.id}, time: #{tweet.created_at}>"
 					process tweet
-					send_tweets
+					TwitterBot.send_tweets
 					
 				end
 			rescue Twitter::Error => error
@@ -115,18 +114,6 @@ class TwitterBot
 
 
 
-			# Returns random characters to append to message
-			def random_chars(num)
-				chars = ["\u270a","\u231b","\u23f3","\u26a1","\u2b50","\u1f4aa"]
-				return chars[rand(chars.count)]
-			end
-
-			# Stores the ID of the tweet in TweetID model
-			def store_id_of(tweet)
-				t_id = TweetID.create(:tweet_id => tweet.id)
-				t_id.save
-			end
-
 
 
 		end # streaming
@@ -148,50 +135,64 @@ class TwitterBot
 				if action.fight
 					debug "Fight: #{fight.title}: Executing pending move after grace period #{ActionGracePeriodSeconds} expired"
 					action.execute_pending_move
-					self.send_tweets
+					TwitterBot.send_tweets
 				end
 				
 			end
 		end
 	end
 
-			# Send a tweet on behalf of the bot.
-			def TwitterBot.send_tweets
-				
-				tweets = TweetQueue.all
-				
-				tweets.each do |tweet|
-					
-					text 			= tweet.text
-					
-					tweet_source 	= {:id => tweet.source}
-					
-					begin
-						new_tweet = reply(text, tweet_source)
-					rescue Twitter::Error => error
-						debug "*** ERROR SENDING TWEET: #{error}"
-					end
-					
-					unless new_tweet.is_unique?
-						random_suffix = random_chars(2)
+	# Send a tweet on behalf of the bot.
+	def TwitterBot.send_tweets
+		consumer_key 'e6IZLNgC4tFd7EzMOW0PepruG'
+		consumer_secret 'tI4UQog02tRsDMgDuJP9X2ZE9DoJM2K5rEGbXSaWPDN8qw9gT2'
+		secret 'LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp' 
+		token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'		
 
-						# TODO: refactor (redundant)
-						begin
-							new_tweet = reply(text + random_suffix, tweet_source)
-							debug "Duplicate tweet id detected; adding random emoji"
-						rescue Twitter::Error => error
-							debug "*** ERROR SENDING TWEET: #{error}"
-						end
-					end
-					
-					store_id_of new_tweet
+		tweets = TweetQueue.all
+		
+		tweets.each do |tweet|
+			
+			text 			= tweet.text
+			
+			tweet_source 	= {:id => tweet.source}
+			
+			begin
+				new_tweet = reply(text, tweet_source)
+			rescue Twitter::Error => error
+				debug "*** ERROR SENDING TWEET: #{error}"
+			end
+			
+			unless new_tweet.is_unique?
+				random_suffix = self.random_chars(2)
 
-					tweet.destroy
-					debug "Outgoing Tweet: #{new_tweet.text}"
+				# TODO: refactor (redundant)
+				begin
+					new_tweet = reply(text + random_suffix, tweet_source)
+					debug "Duplicate tweet id detected; adding random emoji"
+				rescue Twitter::Error => error
+					debug "*** ERROR SENDING TWEET: #{error}"
+				end
+			end
+			
 
-				end # tweets.each
+			t_id = TweetID.create(:tweet_id => new_tweet.id)
+			t_id.save
 
-			end # send_tweets	
+
+			tweet.destroy
+			debug "Outgoing Tweet: #{new_tweet.text}"
+
+		end # tweets.each
+
+	end # send_tweets	
+
+	# Returns random characters to append to message
+	def TwitterBot.random_chars(num)
+		chars = ["\u270a","\u231b","\u23f3","\u26a1","\u2b50","\u1f4aa"]
+		return chars[rand(chars.count)]
+	end
+
 
 end # class TwitterBot
 
