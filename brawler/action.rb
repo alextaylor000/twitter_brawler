@@ -253,7 +253,6 @@ class Action
 
 		# check players' hp for death condition
 		if @fight.status == "active"
-			byebug
 			winner = check_for_winner
 			if winner
 				result << Moves.__send__(:win, @fight, @from, @to, winner.user_name)
