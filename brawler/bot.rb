@@ -80,8 +80,7 @@ class TwitterBot
 
 				# send tweets every loop
 				# TODO: this will be rate-limited by the replies block above. is this a problem?
-				debug "send tweets temporarily disabled"
-				#send_tweets
+				send_tweets
 
 				sleep PollDurationInSeconds
 

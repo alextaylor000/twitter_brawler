@@ -7,7 +7,7 @@ require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/moves') 	# moves.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
-ActionGracePeriodSeconds = 5	# wait this many seconds for a block before executing a move
+ActionGracePeriodSeconds = 30	# wait this many seconds for a block before executing a move
 
 # TestTweet provides a fake id to pass into the store_tweet method for debugging purposes
 class TestTweet
@@ -127,11 +127,13 @@ class Action
 
 			else # a pending action is present
 				if @type == "block"
-					debug "Action #{@id}: Executing block move"
+					debug "Action #{@id}: Received block move"
 
 					if @created_at - @fight.pending_move[:created_at] <= ActionGracePeriodSeconds
 						result << Moves.__send__(@type.to_sym, @fight, @from, @to) # execute block move (block will be aware of the pending move)
 						reset_pending_move
+					else
+						debug "Action #{@id}: Block was too slow. Not executing."
 					end					
 					
 				else
@@ -279,6 +281,8 @@ class Action
 		result << Moves.__send__(pending_move_type.to_sym, @fight, pending_move_from, pending_move_to) # execute the pending move
 
 		process_results result
+
+		reset_pending_move
 
 	end
 

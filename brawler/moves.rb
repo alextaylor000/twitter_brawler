@@ -13,6 +13,10 @@ end
 
 # Returns damage dealt and type based on base attack and a roll of the dice
 def calculate_damage(base_attack, level=:basic)
+	# defaults
+	base_attack ||= 5
+	mult = 1
+
 	roll = roll_dice
 
 	if level == :basic
@@ -27,6 +31,7 @@ def calculate_damage(base_attack, level=:basic)
 		crit 	= 20
 	end
 
+	mult = 1 # default
 
 	case roll
 		when miss
@@ -43,6 +48,7 @@ def calculate_damage(base_attack, level=:basic)
 			mult = 1.25 # critical hit!
 	end
 
+	debug "[calculate_damage] base attack: #{base_attack}, mult: #{mult}"
 	damage = (base_attack * mult).round
 
 	return result, damage
@@ -76,7 +82,6 @@ module Moves
 		:challenge => nil,
 		:accept => nil,
 		:block => nil,
-		:test_dupe => nil,
 
 		# basic
 		:kick => 5,
