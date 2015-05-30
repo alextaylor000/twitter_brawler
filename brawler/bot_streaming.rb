@@ -24,10 +24,11 @@ end
 
 class TwitterBot
 	def initialize
-		consumer_key 'e6IZLNgC4tFd7EzMOW0PepruG'
-		consumer_secret 'tI4UQog02tRsDMgDuJP9X2ZE9DoJM2K5rEGbXSaWPDN8qw9gT2'
-		secret 'LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp' 
-		token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'		
+		consumer_key ENV['TWTFU_CONSUMER_KEY']
+		consumer_secret ENV['TWTFU_CONSUMER_SECRET']
+
+		token ENV['TWTFU_TOKEN']
+		secret ENV['TWTFU_SECRET']
 	end
 
 	# Listen for tweets @twtfu
@@ -93,7 +94,7 @@ class TwitterBot
 
 				# help!
 				if text.include? "help"
-					tweet = TweetQueue.create(:text => "@#{from}: welcome to the dojo. Find the answers you seek at http://twtfu.tumblr.com #{random_chars(1)}", :source => tweet.id)
+					tweet = TweetQueue.create(:text => "@#{from}: welcome to the dojo. Find the answers you seek at http://twtfu.tumblr.com #{TwitterBot.random_chars(1)}", :source => tweet.id)
 					tweet.save
 					return
 				end
@@ -144,10 +145,11 @@ class TwitterBot
 
 	# Send a tweet on behalf of the bot.
 	def TwitterBot.send_tweets
-		consumer_key 'e6IZLNgC4tFd7EzMOW0PepruG'
-		consumer_secret 'tI4UQog02tRsDMgDuJP9X2ZE9DoJM2K5rEGbXSaWPDN8qw9gT2'
-		secret 'LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp' 
-		token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'		
+		consumer_key ENV['TWTFU_CONSUMER_KEY']
+		consumer_secret ENV['TWTFU_CONSUMER_SECRET']
+
+		token ENV['TWTFU_TOKEN']
+		secret ENV['TWTFU_SECRET']
 
 		tweets = TweetQueue.all
 		
