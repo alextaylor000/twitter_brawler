@@ -108,9 +108,14 @@ module Moves
 		if fight.status == "inactive"
 			fight.status = "waiting"
 			fight.save
-			return one_of "@#{to.user_name}: @#{from.user_name} has questioned your honour and challenges you to a duel. Reply 'accept' to begin.", \
+
+			tweets = []
+			tweets << one_of "@#{to.user_name}: @#{from.user_name} has questioned your honour and challenges you to a duel. Reply 'accept' to begin.", \
 							"@#{to.user_name}: @#{from.user_name} has declared battle! Reply 'accept' to begin.", \
 							"@#{to.user_name}: @#{from.user_name} curses your family's name and wishes to duel. Reply 'accept' to begin."
+			tweets << one_of "Tweet @twtfu help or visit http://twtfu.tumblr.com to become enlightened in the ways of twt-fu.", \
+							"Tweet @twtfu help or visit http://twtfu.tumblr.com to find the answers you seek.", \
+							"Tweet @twtfu help or visit http://twtfu.tumblr.com to expand your awareness."
 		end
 
 	end
