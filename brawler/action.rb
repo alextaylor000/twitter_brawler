@@ -141,11 +141,8 @@ class Action
 				else
 					# only process a move if it's valid
 					if Moves.methods.include? @type.to_sym and fight_is_active
-						result << execute_pending_move
-						reset_pending_move
+						execute_pending_move
 
-						# store the current move as the new pending move
-						#result << set_pending_move
 						result << Moves.__send__(@type.to_sym, @fight, @from, @to)
 					end			
 				end				
