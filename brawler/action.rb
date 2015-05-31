@@ -46,7 +46,7 @@ class Action
 			inputs 	= text.split " "
 			inputs.each do |i|
 				next if i.include? "@"
-				keywords << i
+				keywords << i.downcase
 			end
 
 			# check for two keywords
