@@ -215,8 +215,9 @@ end # class TwitterBot
 #Fight.destroy_all
 #Fighter.destroy_all	
 #TweetQueue.destroy_all
-puts "Daemonizing..."
+puts "running..."
 Daemons.daemonize(DaemonOptions)
+puts "Daemonizing..."
 bot = TwitterBot.new
 bot.listen
 
