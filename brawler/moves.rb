@@ -119,7 +119,7 @@ module Moves
 
 			tweets << result1
 			tweets << result2
-			return tweets
+			return result1 # reverting this temporarily because arrays aren't accepted as a return type right now
 		end
 
 	end
