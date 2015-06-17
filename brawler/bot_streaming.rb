@@ -16,7 +16,6 @@ require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 Thread.abort_on_exception=true
 
 DaemonOptions = {
-	:ontop => true,
 	:backtrace => true,
 	:log_output => true,
 	:dir => "logs",
