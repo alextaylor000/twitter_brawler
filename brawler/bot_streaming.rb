@@ -6,6 +6,7 @@
 # TODO: make these environment variables
 require 'byebug'
 require 'chatterbot/dsl'
+require 'daemons'
 
 require File.expand_path(File.dirname(__FILE__) + '/debug') 	# debug.rb
 require File.expand_path(File.dirname(__FILE__) + '/config') 	# config.rb
@@ -13,6 +14,17 @@ require File.expand_path(File.dirname(__FILE__) + '/action') 	# action.rb
 require File.expand_path(File.dirname(__FILE__) + '/models') 	# models.rb
 
 Thread.abort_on_exception=true
+
+DaemonOptions = {
+	:ontop => true,
+	:backtrace => true,
+	:log_output => true,
+	:dir => "logs",
+	:app_name => "#{__FILE__}"
+}
+
+
+
 
 class Twitter::Tweet
 	# Queries our TweetID model to determine if the tweet ID is already in there.
@@ -35,7 +47,7 @@ class TwitterBot
 	def listen
 		# ignore tweets before and including this ID
 		#since_id 596544746069368832
-
+		
 		debug "TwitterBot is listening ..."
 
 		Thread.new {
@@ -204,8 +216,8 @@ end # class TwitterBot
 #Fight.destroy_all
 #Fighter.destroy_all	
 #TweetQueue.destroy_all
-
-
+puts "Daemonizing..."
+Daemons.daemonize(DaemonOptions)
 bot = TwitterBot.new
 bot.listen
 
