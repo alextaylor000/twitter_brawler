@@ -59,27 +59,25 @@ class TwitterBot
 		}
 
 		
-		streaming do
-			begin
-				replies do |tweet|
-					# Find any fights with pending moves and execute them if the block grace period has expired
+		begin
+			streaming do
+				begin
+					replies do |tweet|
+						# Find any fights with pending moves and execute them if the block grace period has expired
 
-					# tweet.in_reply_to_screen_name = "twtfu"
-					# tweet.text = full text of the tweet, i.e. "@twtfu test tweet"
-					# tweet.user.screen_name = the sender of the tweet, i.e. "twtfu_test0001"
-					# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
-						# tweet.user_mentions.first.screen_name = "twtfu", for example					
-					debug "Incoming Tweet: '#{tweet.text}' <id #{tweet.id}, time: #{tweet.created_at}>"
-					process tweet
-					TwitterBot.send_tweets
-					
+						# tweet.in_reply_to_screen_name = "twtfu"
+						# tweet.text = full text of the tweet, i.e. "@twtfu test tweet"
+						# tweet.user.screen_name = the sender of the tweet, i.e. "twtfu_test0001"
+						# tweet.user_mentions = array of mentions, i.e. each user mentioned in the tweet
+							# tweet.user_mentions.first.screen_name = "twtfu", for example					
+						debug "Incoming Tweet: '#{tweet.text}' <id #{tweet.id}, time: #{tweet.created_at}>"
+						process tweet
+						TwitterBot.send_tweets
+					end
+
+				rescue Twitter::Error => error
+					debug "Twitter error: #{error.message}"
 				end
-			rescue Twitter::Error => error
-				debug "Twitter error: #{error.message}"
-			end
-
-
-
 
 			# METHODS
 			# These are in here for a good reason: right now we're in StreamingHandler's scope.
@@ -125,10 +123,16 @@ class TwitterBot
 
 
 
-
-
-
 		end # streaming
+
+
+	rescue EOFError
+			debug "EOFError! Attempting to reconnect..."
+			sleep 10
+			retry
+
+	end # begin
+	
 	end # listen
 
 	# Process pending moves for fights which have them.
