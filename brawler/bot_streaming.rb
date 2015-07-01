@@ -35,6 +35,8 @@ end
 
 class TwitterBot
 	def initialize
+		# these environment variables should be set in /etc/environment
+
 		consumer_key ENV['TWTFU_CONSUMER_KEY']
 		consumer_secret ENV['TWTFU_CONSUMER_SECRET']
 
