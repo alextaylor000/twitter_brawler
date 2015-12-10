@@ -26,10 +26,8 @@ class TwitterBot
 
 	# Listen for tweets @twtfu
 	def listen
-		consumer_key 'e6IZLNgC4tFd7EzMOW0PepruG'
-		consumer_secret 'tI4UQog02tRsDMgDuJP9X2ZE9DoJM2K5rEGbXSaWPDN8qw9gT2'
-		secret 'LKuuyh7smscGxp550KnEaFvMUCqFnwCdhDQJNhTFUWxjp' 
-		token '3228612387-xeQ9dwHVZIZaYYopbyPRzI6SyjVNFTQRW6VinsM'
+		consumer_key ENV['TWTFU_CONSUMER_KEY']
+		consumer_secret ENV['TWTFU_CONSUMER_SECRET']
 
 		# ignore tweets before and including this ID
 		#since_id 596544746069368832
@@ -71,7 +69,7 @@ class TwitterBot
 
 					debug "Incoming Tweet: '#{tweet.text}' <id #{tweet.id}, time: #{tweet.created_at}>"
 					process tweet
-					
+
 				end
 
 				# update chatterbot config. this is apparently required
@@ -91,7 +89,7 @@ class TwitterBot
 			end # begin/rescue
 
 		end # loop
-	
+
 	end # listen
 
 
@@ -134,42 +132,42 @@ class TwitterBot
 
 	# Process pending moves for fights which have them.
 	def process_pending_moves
-		fights_with_pending_moves = Fight.where(:pending_move => {  :$exists => true, :$ne => {}  }) 
-		
+		fights_with_pending_moves = Fight.where(:pending_move => {  :$exists => true, :$ne => {}  })
+
 		fights_with_pending_moves.each do |fight|
 			pending_move = fight.pending_move
-			
+
 			if Time.now - pending_move[:created_at] > ActionGracePeriodSeconds
 				action = Action.new pending_move[:from], "text", pending_move[:to], pending_move[:created_at], pending_move[:tweet_id], pending_move[:type]
-				
+
 				if action.fight
 					debug "Fight: #{fight.title}: Executing pending move after grace period #{ActionGracePeriodSeconds} expired"
 					action.execute_pending_move
 				end
-				
+
 			end
 		end
 	end
 
 	# Send a tweet on behalf of the bot.
 	def send_tweets
-		
+
 		tweets = TweetQueue.all
-		
+
 		tweets.each do |tweet|
-			
+
 			text 			= tweet.text
-			
+
 			tweet_source 	= {:id => tweet.source}
-			
+
 			new_tweet = reply(text, tweet_source)
-			
+
 			unless new_tweet.is_unique?
 				random_suffix = random_chars(2)
 				new_tweet = reply(text + random_suffix, tweet_source)
 				debug "Duplicate tweet id detected; adding random emoji"
 			end
-			
+
 			store_id_of new_tweet
 
 			tweet.destroy
@@ -197,11 +195,9 @@ end # class TwitterBot
 
 # reset db for testing
 #Fight.destroy_all
-#Fighter.destroy_all	
+#Fighter.destroy_all
 #TweetQueue.destroy_all
 
 
 bot = TwitterBot.new
 bot.listen
-
-
